@@ -12,7 +12,7 @@ import (
 
 const (
     VersionMajor = 1
-    VersionMinor = 0
+    VersionMinor = 1
     VersionPatch = 0
     LocalApp = "./titan-sc"
     UsrLocalBinApp = "/usr/local/bin/titan-sc"

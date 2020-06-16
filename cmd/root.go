@@ -19,7 +19,7 @@ var rootCmd = &cobra.Command{
     Use:              GetProgramName(),
     Short:            "Titan SC CLI",
     PersistentPreRun: GetAPIToken,
-    Long:             "Titan SC command line API.",
+    Long:             "Titan Small Cloud command line interface.",
 }
 
 func init() {

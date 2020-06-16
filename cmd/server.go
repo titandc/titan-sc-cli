@@ -8,31 +8,32 @@ import (
 var server = &cobra.Command{
     Use: "server",
     Aliases: []string{"srv"},
-    Short: "Administrate servers.",
-    Long: "Administrate servers.",
+    Short: "Manage servers.",
+    Long: "Manage servers.",
 }
 
 var serverList = &cobra.Command{
     Use: "list",
     Aliases: []string{"ls"},
-    Short: "Show servers detail on all your compagnies.",
-    Long: "Show servers detail on all your compagnies.",
+    Short: "Show detail of all servers in your companies.",
+    Long: "Show detail of all servers in your companies.",
     Run: API.ServerList,
 }
 
 var serverDetail = &cobra.Command{
     Use: "show server_uuid",
     Aliases: []string{"get"},
-    Short: "Show servers detail on one server.",
-    Long: "Show servers detail on one server.",
+    Short: "Show server detail.",
+    Long: "Show server detail.",
     Args: cmdNeed1UUID,
     Run: API.ServerDetail,
 }
 
 var serverStart = &cobra.Command{
     Use: "start server_uuid",
-    Short: "Show detail on one server.",
-    Long: "Show detail on one server.",
+    Short: "Send a request for change state server action.",
+    Long: "Send a request for change server state.\nAction list:" +
+        "\n  start\n  stop\n  hardstop\n  reboot\n",
     Args: cmdNeed1UUID,
     Run: API.ServerStart,
 }
@@ -65,9 +66,27 @@ var serverHardstop = &cobra.Command{
     Run: API.ServerHardstop,
 }
 
+var serverLoadISO = &cobra.Command{
+    Use: "load-iso",
+    Short: "Send a request to load an ISO from HTTPS.",
+    Long: "Send a request to load a bootable ISO from HTTPS.",
+    Run: API.ServerLoadISO,
+}
+
+var serverUnloadISO = &cobra.Command{
+    Use: "unload-iso server_uuid",
+    Short: "Send a request to unload previously loaded ISO(s).",
+    Long: "Send a request to unload all previously loaded ISO(s)",
+    Args : cmdNeed1UUID,
+    Run: API.ServerUnloadISO,
+}
+
 func serverCmdAdd() {
     rootCmd.AddCommand(server)
     server.AddCommand(serverList, serverDetail, serverStart,
-        serverStop, serverRestart, serverHardstop)
-    serverList.PersistentFlags().StringP("company-uuid", "u", "", "Json ident output.")
+        serverStop, serverRestart, serverHardstop, serverLoadISO,
+        serverUnloadISO)
+    serverList.Flags().StringP("company-uuid", "u", "", "JSON ident output.")
+    serverLoadISO.Flags().StringP("url", "u", "", "Load ISO by HTTPS.")
+    serverLoadISO.Flags().StringP("server-uuid", "s", "", "Set server UUID.")
 }
