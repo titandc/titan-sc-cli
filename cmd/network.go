@@ -12,66 +12,66 @@ var network = &cobra.Command{
 }
 
 var networkList = &cobra.Command{
-    Use: "list",
+    Use: "list [--company-uuid COMPANY_UUID]",
     Aliases: []string{"ls"},
-    Short: "List company network.",
-    Long: "List company network details.",
+    Short: "List all networks within your company.",
+    Long: "List all private networks created within your default company, another company UUID may be given.",
     Run: API.NetworkList,
 }
 
 var networkCreate = &cobra.Command{
-    Use: "create company-uuid",
-    Short: "Create a new private network.",
-    Long: "Create a new private network, need company UUID.",
+    Use: "create NETWORK_UUID",
+    Short: "Create a new network.",
+    Long: "Create a new private network.",
     Args: cmdNeed1UUID,
     Run: API.NetworkCreate,
 }
 
-var networkRemove = &cobra.Command{
-    Use: "remove network_uuid",
-    Aliases: []string{"rm"},
-    Short: "Remove one private network.",
-    Long: "Remove a private network, need network UUID.",
+var networkDelete = &cobra.Command{
+    Use: "delete NETWORK_UUID",
+    Aliases: []string{"del"},
+    Short: "Delete a network.",
+    Long: "Completely delete a private network by UUID.",
     Args : cmdNeed1UUID,
     Run: API.NetworkRemove,
 }
 
 var networkAttachServer = &cobra.Command{
-    Use: "attach [--network-uuid --server-uuid]",
+    Use: "attach --network-uuid NETWORK_UUID --server-uuid SERVER_UUID",
     Aliases: []string{"add"},
-    Short: "Attach server on private network.",
-    Long: "Attach server on private network need companyUUID serverUUID.",
+    Short: "Attach a server on private network.",
+    Long: "Attach a server on private network.",
     Run: API.NetworkAttachServer,
 }
 
 var networkDetachServer = &cobra.Command{
-    Use: "detach [--network-uuid --server-uuid]",
-    Short: "Detach server on private network.",
-    Long: "Detach server on private network need companyUUID serverUUID.",
+    Use: "detach --network-uuid NETWORK_UUID --server-uuid SERVER_UUID",
+    Short: "Detach a server from private network.",
+    Long: "Detach a server from private network.",
     Run: API.NetworkDetachServer,
 }
 
 var networkRename = &cobra.Command{
-    Use: "rename [--network-uuid --name].",
-    Short: "Rename private network.",
-    Long: "Update the name of an existing network. You must be an administrator of the company. No space accepted",
+    Use: "rename --network-uuid NETWORK_UUID --name NEW_NAME",
+    Short: "Rename a network.",
+    Long: "Update the name of a private network, no space or special characters accepted.",
     Run: API.NetworkRename,
 }
 
 func networkCmdAdd() {
     rootCmd.AddCommand(network)
-    network.AddCommand(networkList, networkCreate, networkRemove,
+    network.AddCommand(networkList, networkCreate, networkDelete,
         networkAttachServer, networkDetachServer, networkRename)
 
     networkCreate.Flags().StringP("name", "n", "", "Set new network name.")
-    networkList.Flags().StringP("company-uuid", "u", "", "Set company UUID.")
+    networkList.Flags().StringP("company-uuid", "c", "", "Set company UUID.")
 
-    networkAttachServer.Flags().StringP("network-uuid", "u", "", "Set network UUID.")
+    networkAttachServer.Flags().StringP("network-uuid", "n", "", "Set network UUID.")
     networkAttachServer.Flags().StringP("server-uuid", "s", "", "Set server UUID.")
 
-    networkDetachServer.Flags().StringP("network-uuid", "u", "", "Set network UUID.")
+    networkDetachServer.Flags().StringP("network-uuid", "n", "", "Set network UUID.")
     networkDetachServer.Flags().StringP("server-uuid", "s", "", "Set server UUID.")
 
     networkRename.Flags().StringP("network-uuid", "u", "", "Set network UUID.")
-    networkRename.Flags().StringP("name", "n", "", "Set network new name.")
+    networkRename.Flags().StringP("name", "n", "", "Set new network name.")
 }

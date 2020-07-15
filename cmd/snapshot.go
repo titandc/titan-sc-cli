@@ -8,37 +8,37 @@ import (
 var snapshot = &cobra.Command{
     Use: "snapshot",
     Aliases: []string{"snap"},
-    Short: "Manage server's snapshots.",
+    Short: "Manage servers' snapshots.",
 }
 
 var snapshotList = &cobra.Command{
-    Use: "list server_uuid",
+    Use: "list SERVER_UUID",
     Aliases: []string{"ls"},
-    Short: "Remove one server snapshot.",
-    Long: "Remove one server snapshot (need server UUID).",
+    Short: "List all snapshots of a server.",
+    Long: "List all snapshots of a server.",
     Args: cmdNeed1UUID,
     Run: API.SnapshotList,
 }
 
 var snapshotCreate = &cobra.Command{
-    Use: "create server-uuid",
-    Short: "Create a new server snapshopt.",
-    Long: "Create a new snapshot for a server (need server UUID).",
+    Use: "create SERVER_UUID",
+    Short: "Create a snapshot of a server.",
+    Long: "Create a new snapshot of a server.",
     Args: cmdNeed1UUID,
     Run: API.SnapshotCreate,
 }
 
-var snapshotRemove = &cobra.Command{
-    Use: "remove [--server-uuid --snap-uuid]",
-    Aliases: []string{"rm"},
-    Short: "Remove one server snapshot.",
-    Long: "Remove one server snapshot.",
+var snapshotDelete = &cobra.Command{
+    Use: "delete --server-uuid SERVER_UUID --snapshot-uuid SNAPSHOT_UUID",
+    Aliases: []string{"del"},
+    Short: "Delete a server's snapshot.",
+    Long: "Delete a server's snapshot.",
     Run: API.SnapshotRemove,
 }
 
 func snapshotCmdAdd() {
     rootCmd.AddCommand(snapshot)
-    snapshot.AddCommand(snapshotList, snapshotCreate, snapshotRemove)
-    snapshotRemove.Flags().StringP("server-uuid", "u", "", "Set server UUID.")
-    snapshotRemove.Flags().StringP("snapshot-uuid", "s", "", "Set snapshot UUID.")
+    snapshot.AddCommand(snapshotList, snapshotCreate, snapshotDelete)
+    snapshotDelete.Flags().StringP("server-uuid", "u", "", "Set server UUID.")
+    snapshotDelete.Flags().StringP("snapshot-uuid", "s", "", "Set snapshot UUID.")
 }

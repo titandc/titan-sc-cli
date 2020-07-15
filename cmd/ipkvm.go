@@ -5,41 +5,41 @@ import (
     . "titan-sc/api"
 )
 
-var IPKvm = &cobra.Command{
-    Use: "ipkvm",
-    Short: "Manage server's IP KVM.",
-    Long: "Manage server's IP KVM.",
+var KVMIP = &cobra.Command{
+    Use: "kvmip",
+    Aliases: []string{"kvm"},
+    Short: "Manage servers' KVM IP.",
+    Long: "Manage servers' KVM IP.",
 }
 
-var IPKvmStart = &cobra.Command{
-    Use: "start server_uuid",
-    Short: "Start ip-kvm.",
-    Long: "Start ip-kvm on server UUID.",
+var KVMIPStart = &cobra.Command{
+    Use: "start SERVER_UUID",
+    Short: "Start a KVM IP.",
+    Long: "Start KVM IP on a server.",
     Args: cmdNeed1UUID,
-    Run: API.IPKvmStart,
+    Run: API.KVMIPStart,
 }
 
-var IPKvmStop = &cobra.Command{
-    Use: "stop server_uuid",
-    Short: "Stop ip-kvm.",
-    Long: "Stop ip-kvm on server UUID.",
+var KVMIPStop = &cobra.Command{
+    Use: "stop SERVER_UUID",
+    Short: "Stop a KVM IP.",
+    Long: "Stop KVM IP on a server.",
     Args: cmdNeed1UUID,
-    Run: API.IPKvmStop,
+    Run: API.KVMIPStop,
 }
 
-var IPKvmShow = &cobra.Command{
-    Use: "show server_uuid",
+var KVMIPShow = &cobra.Command{
+    Use: "show SERVER_UUID",
     Aliases: []string{"get"},
-    Short: "Show IP Kvm informations.",
-    Long: "Show IP Kvm information (status,URI).",
+    Short: "Show KVM IP information.",
+    Long: "Show KVM IP information of a server.",
     Args: cmdNeed1UUID,
-    Run: API.IPKvmGetInfos,
+    Run: API.KVMIPGetInfos,
 }
 
-
-func ipkvmCmdAdd() {
-    rootCmd.AddCommand(IPKvm)
-    IPKvm.AddCommand(IPKvmStart)
-    IPKvm.AddCommand(IPKvmStop)
-    IPKvm.AddCommand(IPKvmShow)
+func kvmIpCmdAdd() {
+    rootCmd.AddCommand(KVMIP)
+    KVMIP.AddCommand(KVMIPStart)
+    KVMIP.AddCommand(KVMIPStop)
+    KVMIP.AddCommand(KVMIPShow)
 }

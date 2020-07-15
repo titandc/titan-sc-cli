@@ -5,6 +5,7 @@ import (
     "github.com/spf13/cobra"
     "github.com/spf13/viper"
     "os"
+    "os/user"
     "runtime"
     "strings"
     . "titan-sc/api"
@@ -12,7 +13,7 @@ import (
 
 const (
     VersionMajor = 1
-    VersionMinor = 1
+    VersionMinor = 2
     VersionPatch = 0
     LocalApp = "./titan-sc"
     UsrLocalBinApp = "/usr/local/bin/titan-sc"
@@ -25,13 +26,6 @@ var weatherMap = &cobra.Command{
     Run: API.WeatherMap,
 }
 
-var versionCmd = &cobra.Command{
-    Use: "version",
-    Short: "Print version and exit.",
-    Long: "Print current CLI version and exit.",
-    Run: version,
-}
-
 var AddTokenCmd = &cobra.Command{
     Use: "setup \"token-string\"",
     Short: "Automated config/install.",
@@ -41,16 +35,7 @@ var AddTokenCmd = &cobra.Command{
 }
 
 func utilsCmdAdd() {
-    rootCmd.AddCommand(weatherMap, versionCmd, AddTokenCmd)
-}
-
-func version(cmd *cobra.Command, args []string) {
-    _ = cmd
-    _ = args
-
-    fmt.Printf("Titan cloud CLI version %d.%d.%d\n",
-        VersionMajor, VersionMinor, VersionPatch)
-    os.Exit(0)
+    rootCmd.AddCommand(weatherMap, AddTokenCmd)
 }
 
 func InitApp(cmd *cobra.Command, args []string) {
@@ -71,8 +56,17 @@ func InitApp(cmd *cobra.Command, args []string) {
 }
 
 func InitAppUnixLike(token string) error {
+    // check user UID
+    usr, err := user.Current()
+    if err != nil {
+        return err
+    }
+    if usr.Uid != "0" {
+        return fmt.Errorf("You must have root privileges to use the 'setup' command.")
+    }
+
     // install bin in /usr/local/bin
-    _, err := os.Stat(UsrLocalBinApp)
+    _, err = os.Stat(UsrLocalBinApp)
     if !os.IsNotExist(err) {
         if err := os.Remove(UsrLocalBinApp); err != nil {
             return err
@@ -85,7 +79,7 @@ func InitAppUnixLike(token string) error {
     path := os.Getenv("HOME") + "/" + ".titan"
     if err := os.Mkdir(path, os.ModePerm); err != nil {
         if !strings.Contains(err.Error(), ": file exists") {
-            return fmt.Errorf("Init: create dir path %s error.", path)
+            return fmt.Errorf("Init: create dir path <%s> error.", path)
         }
     }
     path = path + "/" + ConfigFileName

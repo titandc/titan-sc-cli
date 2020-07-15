@@ -1,2 +1,3 @@
 [default]
 token = "your token"
+uri = "https://sc.titandc.net/api/v1"

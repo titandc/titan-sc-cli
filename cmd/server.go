@@ -21,62 +21,82 @@ var serverList = &cobra.Command{
 }
 
 var serverDetail = &cobra.Command{
-    Use: "show server_uuid",
+    Use: "show SERVER_UUID",
     Aliases: []string{"get"},
     Short: "Show server detail.",
-    Long: "Show server detail.",
+    Long: "Show detailed information about a server.",
     Args: cmdNeed1UUID,
     Run: API.ServerDetail,
 }
 
 var serverStart = &cobra.Command{
-    Use: "start server_uuid",
-    Short: "Send a request for change state server action.",
-    Long: "Send a request for change server state.\nAction list:" +
+    Use: "start SERVER_UUID",
+    Short: "Send an action request to start a server.",
+    Long: "Send an action request to start a server." +
+        "\nList of available actions:" +
         "\n  start\n  stop\n  hardstop\n  reboot\n",
     Args: cmdNeed1UUID,
     Run: API.ServerStart,
 }
 
 var serverStop = &cobra.Command{
-    Use: "stop server_uuid",
-    Short: "Send a request for change state server action.",
-    Long: "Send a request for change server state.\nAction list:" +
+    Use: "stop SERVER_UUID",
+    Short: "Send an action request to stop a server.",
+    Long: "Send an action request to stop a server." +
+        "\nList of available actions:" +
         "\n  start\n  stop\n  hardstop\n  reboot\n",
     Args: cmdNeed1UUID,
     Run: API.ServerStop,
 }
 
 var serverRestart = &cobra.Command{
-    Use: "restart server_uuid",
+    Use: "restart SERVER_UUID",
     Aliases: []string{"reboot"},
-    Short: "Send a request for change state server action.",
-    Long: "Send a request for change server state.\nAction list:" +
+    Short: "Send an action request to restart a server.",
+    Long: "Send an action request to restart a server." +
+        "\nList of available actions:" +
         "\n  start\n  stop\n  hardstop\n  reboot\n",
     Args : cmdNeed1UUID,
     Run: API.ServerRestart,
 }
 
 var serverHardstop = &cobra.Command{
-    Use: "hardstop server_uuid",
-    Short: "Send a request for change state server action.",
-    Long: "Send a request for change server state.\nAction list:" +
+    Use: "hardstop SERVER_UUID",
+    Short: "Send an action request to hardstop a server.",
+    Long: "Send an action request to hardstop a server." +
+        "\nList of available actions:" +
         "\n  start\n  stop\n  hardstop\n  reboot\n",
     Args : cmdNeed1UUID,
     Run: API.ServerHardstop,
 }
 
+var serverChangeName = &cobra.Command{
+    Use: "rename --server-uuid SERVER_UUID --new-name NEW_NAME",
+    Short: "Send a request to change server's name.",
+    Long: "Send a request to change server's name.",
+    Run: API.ServerChangeName,
+}
+
+var serverChangeReverse = &cobra.Command{
+    Use: "reverse NEW_REVERSE",
+    Short: "Send a request to change server's reverse.",
+    Long: "Send a request to change server's reverse.",
+    Run: API.ServerChangeReverse,
+}
+
 var serverLoadISO = &cobra.Command{
-    Use: "load-iso",
+    Use: "load-iso --uri HTTPS_URI --server-uuid SERVER_UUID",
+    Aliases: []string{"li"},
     Short: "Send a request to load an ISO from HTTPS.",
     Long: "Send a request to load a bootable ISO from HTTPS.",
     Run: API.ServerLoadISO,
 }
 
 var serverUnloadISO = &cobra.Command{
-    Use: "unload-iso server_uuid",
+    Use: "unload-iso SERVER_UUID",
+    Aliases: []string{"ui"},
     Short: "Send a request to unload previously loaded ISO(s).",
-    Long: "Send a request to unload all previously loaded ISO(s)",
+    Long: "Send a request to unload all previously loaded ISO(s).",
     Args : cmdNeed1UUID,
     Run: API.ServerUnloadISO,
 }
@@ -85,8 +105,15 @@ func serverCmdAdd() {
     rootCmd.AddCommand(server)
     server.AddCommand(serverList, serverDetail, serverStart,
         serverStop, serverRestart, serverHardstop, serverLoadISO,
-        serverUnloadISO)
-    serverList.Flags().StringP("company-uuid", "u", "", "JSON ident output.")
-    serverLoadISO.Flags().StringP("url", "u", "", "Load ISO by HTTPS.")
+        serverUnloadISO, serverChangeName, serverChangeReverse)
+    serverList.Flags().StringP("company-uuid", "c", "", "Set company UUID.")
+
     serverLoadISO.Flags().StringP("server-uuid", "s", "", "Set server UUID.")
+    serverLoadISO.Flags().StringP("uri", "u", "", "Set remote ISO URI (HTTPS only).")
+
+    serverChangeName.Flags().StringP("server-uuid", "s", "", "Set server UUID.")
+    serverChangeName.Flags().StringP("name", "n", "", "Set new server's name.")
+
+    serverChangeReverse.Flags().StringP("server-uuid", "s", "", "Set server UUID.")
+    serverChangeReverse.Flags().StringP("reverse", "r", "", "Set new server's reverse.")
 }

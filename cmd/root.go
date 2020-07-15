@@ -12,6 +12,7 @@ import (
 
 const (
     EnvApiToken    = "TITAN_API_TOKEN"
+    EnvApiUri      = "TITAN_URI"
     ConfigFileName = "config"
 )
 
@@ -19,7 +20,7 @@ var rootCmd = &cobra.Command{
     Use:              GetProgramName(),
     Short:            "Titan SC CLI",
     PersistentPreRun: GetAPIToken,
-    Long:             "Titan Small Cloud command line interface.",
+    Long:             "Titan Small Cloud - Command Line Interface",
 }
 
 func init() {
@@ -29,8 +30,12 @@ func init() {
     historyCmdAdd()
     utilsCmdAdd()
     networkCmdAdd()
-    ipkvmCmdAdd()
+    kvmIpCmdAdd()
+    ipCmdAdd()
+    versionCmdAdd()
     rootCmd.PersistentFlags().BoolP("human", "H", false, "Format output for human.")
+    rootCmd.PersistentFlags().BoolP("color", "C", false, "Enable colorized output.")
+    loadConfigurationFile()
 }
 
 func Execute() {
@@ -54,35 +59,65 @@ func GetProgramName() string {
     return progname
 }
 
-/* juste get token API */
 func GetAPIToken(cmd *cobra.Command, args []string) {
 
     arrCmd := strings.SplitN(cmd.CommandPath(), " ", 3)
-    if len(arrCmd) > 1 && (arrCmd[1] == "version" || arrCmd[1] == "setup") {
+    if len(arrCmd) > 1 && arrCmd[1] == "setup" {
+        return
+    }
+    if len(arrCmd) > 2 && arrCmd[1] == "version" && arrCmd[2] == "cli" {
+        return
+    }
+    if len(arrCmd) == 2 && arrCmd[1] == "version" {
         return
     }
 
-    GetApiTokenByEnv()
+    // Retrieve mandatory API token
+    GetApiTokenFromEnv()
     if API.Token == "" {
-        if err := GetApiTokenByFile(); err != nil {
+        if err := GetApiTokenFromFile(); err != nil {
             fmt.Println(err.Error())
             os.Exit(1)
         }
     }
 
-    if API.Token == "" {
-        fmt.Println("Token api missing")
-        os.Exit(1)
+    // Retrieve optional API URI
+    GetApiUriFromEnv()
+    if API.URI == "" {
+        if err := GetApiUriFromFile(); err != nil {
+            API.URI = DefaultURI
+        }
     }
 }
 
-func GetApiTokenByEnv() {
+func GetApiTokenFromEnv() {
     API.Token = os.Getenv(EnvApiToken)
 }
 
-func GetApiTokenByFile() error {
-    var path string
+func GetApiTokenFromFile() error {
+    token := viper.GetString("default.token")
+    if token == "" {
+        return fmt.Errorf("Unable to retrieve token from configuration file.")
+    }
+    API.Token = token
+    return nil
+}
 
+func GetApiUriFromEnv() {
+    API.URI = os.Getenv(EnvApiUri)
+}
+
+func GetApiUriFromFile() error {
+    uri := viper.GetString("default.uri")
+    if uri == "" {
+        return fmt.Errorf("Unable to retrieve token from configuration file.")
+    }
+    API.URI = uri
+    return nil
+}
+
+func loadConfigurationFile() {
+    var path string
     if runtime.GOOS == "windows" {
         path = "./"
     } else {
@@ -91,9 +126,5 @@ func GetApiTokenByFile() error {
     viper.SetConfigType("toml")
     viper.SetConfigName(ConfigFileName)
     viper.AddConfigPath(path)
-    if err := viper.ReadInConfig(); err != nil {
-        return fmt.Errorf("Error to read configuration file: %s", err.Error())
-    }
-    API.Token = viper.GetString("default.token")
-    return nil
+    _ = viper.ReadInConfig()
 }

@@ -15,15 +15,15 @@ var companyList = &cobra.Command{
     Use: "list",
     Aliases: []string{"ls"},
     Short: "List all your companies.",
-    Long: "List all your compagnies.",
+    Long: "List all your companies.",
     Run: API.CompaniesList,
 }
 
 var companyShow = &cobra.Command{
-    Use: "show [company_uuid]",
+    Use: "show COMPANY_UUID",
     Aliases: []string{"get"},
     Short: "Show company detail.",
-    Long: "Show company detail (need company UUID).",
+    Long: "Show detailed information about a company.",
     Args: cmdNeed1UUID,
     Run: API.CompanyDetail,
 }

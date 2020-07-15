@@ -9,7 +9,7 @@ import (
 func cmdNeed1UUID(cmd *cobra.Command, args []string) error {
     _ = cmd
     if len(args) < 1 {
-        return fmt.Errorf("Invalid number argument: need 1 argument;\n")
+        return fmt.Errorf("Invalid number argument: need 1 UUID;\n")
     }
 
     if !checkUUIDFormat(args[0]) {

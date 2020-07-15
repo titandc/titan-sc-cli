@@ -1,6 +1,14 @@
 
 # ChangeLog
 
+## 1.2.0
+
+- Read optional URI from environment var & configuration file
+- Add server name & reverse update
+- Add global option to colorize servers list output
+- New attach/detach IP commands on server
+- New command to list IPs available on a company
+- New commands to show api & cli versions
 
 ## 1.1.0
 
