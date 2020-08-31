@@ -178,6 +178,7 @@ func (API *APITitan) IPKvmAction(action, serverUUID string) {
 	err := API.SendAndResponse(HTTPPut, "/compute/servers/"+serverUUID+"/ipkvm", reqData)
 	if err != nil {
 		fmt.Println(err.Error())
+		return
 	}
 
 	if !API.HumanReadable {
@@ -233,6 +234,29 @@ func (API *APITitan) WeatherMap(cmd *cobra.Command, args []string) {
 			"  Private network: %s\n",
 			weatherMap.Compute, weatherMap.Storage,
 			weatherMap.PublicNetwork, weatherMap.PrivateNetwork)
+	}
+}
+
+func (API *APITitan) ManagedServices(cmd *cobra.Command, args []string) {
+	API.ParseGlobalFlags(cmd)
+	companyUUID := args[0]
+	managedServicesOpts := ManagedServices{
+		Company:      companyUUID,
+	}
+	reqData, err := json.Marshal(managedServicesOpts)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	err = API.SendAndResponse(HTTPPost, "/compute/managed_services", reqData)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	if !API.HumanReadable {
+		API.PrintJson()
+	} else {
+		API.DefaultPrintReturn()
 	}
 }
 
@@ -323,6 +347,17 @@ func (API *APITitan) SendAndResponse(method, path string, req []byte) error {
 	API.RespBody, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
+	}
+
+	// Check command error
+	APIRet := &APIReturn{}
+	err = json.Unmarshal(API.RespBody, APIRet)
+	if err == nil && APIRet.Error != "" {
+		if API.HumanReadable {
+			return fmt.Errorf("Error: %s", APIRet.Error)
+		} else {
+			return fmt.Errorf(string(API.RespBody))
+		}
 	}
 	return nil
 }

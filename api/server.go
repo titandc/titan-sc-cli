@@ -232,6 +232,7 @@ func (API *APITitan) PrintServerDetail(server *APIServer) {
         fmt.Println("IP Kvm URI:", server.KvmIp.URI)
     }
 
+    fmt.Println("Managed network uuid:", server.ManagedNetwork)
     fmt.Printf("Network:\n"+
         "  - IPv4: %s\n"+
         "  - IPv6: %s\n"+

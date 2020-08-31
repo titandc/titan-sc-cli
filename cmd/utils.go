@@ -26,7 +26,7 @@ var weatherMap = &cobra.Command{
     Run: API.WeatherMap,
 }
 
-var AddTokenCmd = &cobra.Command{
+var addTokenCmd = &cobra.Command{
     Use: "setup \"token-string\"",
     Short: "Automated config/install.",
     Long: "Automated config/install.",
@@ -34,8 +34,16 @@ var AddTokenCmd = &cobra.Command{
     Run: InitApp,
 }
 
+var managedServices = &cobra.Command{
+    Use: "managed-services COMPANY_UUID",
+    Short: "Enable managed services.",
+    Long: "Enable managed services.",
+    Args: cmdNeed1UUID,
+    Run: API.ManagedServices,
+}
+
 func utilsCmdAdd() {
-    rootCmd.AddCommand(weatherMap, AddTokenCmd)
+    rootCmd.AddCommand(weatherMap, addTokenCmd, managedServices)
 }
 
 func InitApp(cmd *cobra.Command, args []string) {
@@ -89,6 +97,7 @@ func InitAppUnixLike(token string) error {
 func InitCreateFile(path, token string) error {
     data := map[string]interface{}{
         "token": token,
+        "uri": 	DefaultURI,
     }
     viper.Set("default", data)
     viper.SetConfigType("toml")

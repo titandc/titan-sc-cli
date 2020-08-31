@@ -19,7 +19,7 @@ func (API *APITitan) IPAttach(cmd *cobra.Command, args []string) {
         log.Println("Attach server IP: missing --ip argument.")
         return
     }
-    API.AttachDeatchIPServer(HTTPPost, serverUUID, IP, IPVersion)
+    API.AttachDetachIPServer(HTTPPost, serverUUID, IP, IPVersion)
 }
 
 func (API *APITitan) IPDetach(cmd *cobra.Command, args []string) {
@@ -29,13 +29,13 @@ func (API *APITitan) IPDetach(cmd *cobra.Command, args []string) {
     IPVersion := 4
 
     if IP == "" {
-        log.Println("Deatch server IP: missing --ip argument.")
+        log.Println("Detach server IP: missing --ip argument.")
         return
     }
-    API.AttachDeatchIPServer(HTTPDelete, serverUUID, IP, IPVersion)
+    API.AttachDetachIPServer(HTTPDelete, serverUUID, IP, IPVersion)
 }
 
-func (API *APITitan) AttachDeatchIPServer(HttpMethod, serverUUID, ip string, version int) {
+func (API *APITitan) AttachDetachIPServer(HttpMethod, serverUUID, ip string, version int) {
     ipOpt := APIIP{
         IP:      ip,
         Version: version,

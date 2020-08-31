@@ -25,7 +25,7 @@ go build -mod vendor
 
 ### 2) __Download pre-compiled static binary__
 
-Go to the latest [release](https://github.com/titandc/titan-sc-cli/releases/tag/v1.0.0) and download the tarball for your operating system and architecture.
+Go to the latest [release](https://github.com/titandc/titan-sc-cli/releases) and download the tarball for your operating system and architecture.
 
 ## Configuration
 
@@ -105,24 +105,27 @@ You can follow [this guide](https://www.computerhope.com/issues/ch000549.htm) to
 Global help:
 
 ```
-Titan SC command line API.
+Titan Small Cloud - Command Line Interface
 
 Usage:
   titan-sc [command]
 
 Available Commands:
-  company     Retrieve information about your companies.
-  help        Help about any command
-  history     List latest events.
-  setup       Automated config/install.
-  ipkvm       Manage server's IP KVM.
-  network     Manage private networks.
-  server      Administrate servers.
-  snapshot    Manage server's snapshots.
-  version     Print version and exit.
-  weathermap  Show weather map.
+  company          Retrieve information about your companies.
+  help             Help about any command
+  history          List latest events on a server or a company.
+  ip               Manage IP addresses.
+  kvmip            Manage servers' KVM IP.
+  managed-services Enable managed services.
+  network          Manage private networks.
+  server           Manage servers.
+  setup            Automated config/install.
+  snapshot         Manage servers' snapshots.
+  version          Show API or CLI version.
+  weathermap       Show weather map.
 
 Flags:
+  -C, --color   Enable colorized output.
   -h, --help    help for titan-sc
   -H, --human   Format output for human.
 

@@ -106,15 +106,16 @@ func (API *APITitan) NetworkServerOps(cmd *cobra.Command, networkUUID, serverUUI
 }
 
 func (API *APITitan) NetworkCreate(cmd *cobra.Command, args []string) {
-
     companyUUID := args[0]
     API.ParseGlobalFlags(cmd)
     networkName, _ := cmd.Flags().GetString("name")
+    cidr, _ := cmd.Flags().GetString("cidr")
 
     net := APINetworkCreate{
         MaxMTU: 8948,
         Name:   networkName,
         Ports:  6,
+        CIDR:   cidr,
     }
     net.Speed.Value = 1
     net.Speed.Unit = "Gbps"
@@ -179,12 +180,22 @@ func (API *APITitan) NetworkPrintBase(net *APINetwork) {
         "  State: %s\n"+
         "  UUID: %s\n"+
         "  Company: %s\n"+
-        "  Max MTU: %d\n"+
-        "  Owner informations:\n"+
+        "  Max MTU: %d\n",
+        net.Name, date, net.Ports, net.Speed.Value, net.Speed.Unit,
+        net.State, net.UUID, net.Company, net.MaxMtu)
+
+    if net.Managed {
+        fmt.Printf("  Managed: %t\n"+
+            "  CIDR: %s\n",
+            net.Managed, net.CIDR)
+        if net.Gateway != "" {
+            fmt.Printf("  %s\n", net.Gateway)
+        }
+    }
+
+    fmt.Printf("  Owner informations:\n"+
         "    Name: %s %s (%s)\n"+
         "    UUID: %s\n",
-        net.Name, date, net.Ports, net.Speed.Value, net.Speed.Unit,
-        net.State, net.UUID, net.Company, net.MaxMtu,
         net.Owner.Firstname, net.Owner.Lastname, net.Owner.Email,
         net.Owner.UUID)
 }
@@ -194,7 +205,6 @@ type APINetworkRename struct {
 }
 
 func (API *APITitan) NetworkRename(cmd *cobra.Command, args []string) {
-
     networkUUID, _ := cmd.Flags().GetString("network-uuid")
     name, _ := cmd.Flags().GetString("name")
 
@@ -215,6 +225,49 @@ func (API *APITitan) NetworkRename(cmd *cobra.Command, args []string) {
     }
 
     err = API.SendAndResponse(HTTPPut, "/compute/networks/"+networkUUID, reqData)
+    if err != nil {
+        fmt.Println(err.Error())
+        return
+    }
+    if !API.HumanReadable {
+        API.PrintJson()
+    } else {
+        API.DefaultPrintReturn()
+    }
+}
+
+func (API *APITitan) NetworkSetGateway(cmd *cobra.Command, args []string) {
+    networkUUID, _ := cmd.Flags().GetString("network-uuid")
+    ip, _ := cmd.Flags().GetString("ip")
+
+    if networkUUID == "" {
+        fmt.Println("Error: --network-uuid missing.")
+        return
+    }
+    if ip == "" {
+        fmt.Println("Error: --ip missing.")
+        return
+    }
+    ipData := APIIP{
+        IP:      ip,
+        Version: 4,
+    }
+    reqData, err := json.Marshal(ipData)
+    if err != nil {
+        fmt.Println(err.Error())
+        return
+    }
+    API.networkGateway(HTTPPut, networkUUID, reqData)
+}
+
+func (API *APITitan) NetworkUnsetGateway(cmd *cobra.Command, args []string) {
+    _ = cmd
+    networkUUID := args[0]
+    API.networkGateway(HTTPDelete, networkUUID, nil)
+}
+
+func (API *APITitan) networkGateway(HTTPType, networkUUID string, reqData []byte) {
+    err := API.SendAndResponse(HTTPType, "/compute/networks/"+networkUUID+"/gateway", reqData)
     if err != nil {
         fmt.Println(err.Error())
         return

@@ -68,6 +68,7 @@ type APIServer struct {
     } `json:"disk"`
     ISOs           []APIISO `json:"isos"`
     PendingActions []string `json:"pending_actions"`
+    ManagedNetwork string   `json:"managed_network"`
 }
 
 type APIServerUpdateInfos struct {
@@ -104,9 +105,12 @@ type APINetwork struct {
         State string `json:"state"`
         UUID  string `json:"uuid"`
     } `json:"servers"`
-    Speed APISize `json:"speed"`
-    State string  `json:"state"`
-    UUID  string  `json:"uuid"`
+    Speed   APISize `json:"speed"`
+    State   string  `json:"state"`
+    UUID    string  `json:"uuid"`
+    Managed bool    `json:"managed"`
+    CIDR    string  `json:"cidr"`
+    Gateway string  `json:"gateway"`
 }
 
 type APINetworkList struct {
@@ -172,6 +176,7 @@ type APINetworkCreate struct {
     Name   string  `json:"name"`
     Ports  int     `json:"ports"`
     Speed  APISize `json:"value"`
+    CIDR   string  `json:"cidr,omitempty"`
 }
 
 type APIKvmIP struct {
@@ -246,4 +251,8 @@ type APIIP struct {
 type APIVersion struct {
     Date    string `json:"release_date"`
     Version string `json:"version"`
+}
+
+type ManagedServices struct {
+    Company string `json:"company"`
 }

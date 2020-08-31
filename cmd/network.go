@@ -20,7 +20,8 @@ var networkList = &cobra.Command{
 }
 
 var networkCreate = &cobra.Command{
-    Use: "create NETWORK_UUID",
+    Use: "create COMPANY_UUID",
+    Aliases: []string{"add"},
     Short: "Create a new network.",
     Long: "Create a new private network.",
     Args: cmdNeed1UUID,
@@ -38,7 +39,6 @@ var networkDelete = &cobra.Command{
 
 var networkAttachServer = &cobra.Command{
     Use: "attach --network-uuid NETWORK_UUID --server-uuid SERVER_UUID",
-    Aliases: []string{"add"},
     Short: "Attach a server on private network.",
     Long: "Attach a server on private network.",
     Run: API.NetworkAttachServer,
@@ -58,13 +58,30 @@ var networkRename = &cobra.Command{
     Run: API.NetworkRename,
 }
 
+var networkSetGW = &cobra.Command{
+    Use: "set-gw --network-uuid NETWORK_UUID --ip IP_ADDRESS",
+    Short: "Set the gateway for a managed network.",
+    Long: "Set the gateway for a managed network.",
+    Run: API.NetworkSetGateway,
+}
+
+var networkUnsetGW = &cobra.Command{
+    Use: "unset-gw NETWORK_UUID",
+    Short: "Unset the gateway of a managed network.",
+    Long: "Unset the gateway of a managed network.",
+    Args: cmdNeed1UUID,
+    Run: API.NetworkUnsetGateway,
+}
+
 func networkCmdAdd() {
     rootCmd.AddCommand(network)
     network.AddCommand(networkList, networkCreate, networkDelete,
-        networkAttachServer, networkDetachServer, networkRename)
+        networkAttachServer, networkDetachServer, networkRename,
+        networkSetGW, networkUnsetGW)
 
     networkCreate.Flags().StringP("name", "n", "", "Set new network name.")
-    networkList.Flags().StringP("company-uuid", "c", "", "Set company UUID.")
+    networkCreate.Flags().StringP("cidr", "", "", "Provide a CIDR to enable managed network.")
+    networkList.Flags().StringP("company-uuid", "", "", "Set company UUID.")
 
     networkAttachServer.Flags().StringP("network-uuid", "n", "", "Set network UUID.")
     networkAttachServer.Flags().StringP("server-uuid", "s", "", "Set server UUID.")
@@ -74,4 +91,7 @@ func networkCmdAdd() {
 
     networkRename.Flags().StringP("network-uuid", "u", "", "Set network UUID.")
     networkRename.Flags().StringP("name", "n", "", "Set new network name.")
+
+    networkSetGW.Flags().StringP("network-uuid", "n", "", "Set network UUID.")
+    networkSetGW.Flags().StringP("ip", "i", "", "Set gateway IP.")
 }
