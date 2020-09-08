@@ -240,8 +240,8 @@ func (API *APITitan) WeatherMap(cmd *cobra.Command, args []string) {
 func (API *APITitan) ManagedServices(cmd *cobra.Command, args []string) {
 	API.ParseGlobalFlags(cmd)
 	companyUUID := args[0]
-	managedServicesOpts := ManagedServices{
-		Company:      companyUUID,
+	managedServicesOpts := APIManagedServices{
+		Company: companyUUID,
 	}
 	reqData, err := json.Marshal(managedServicesOpts)
 	if err != nil {
@@ -360,4 +360,29 @@ func (API *APITitan) SendAndResponse(method, path string, req []byte) error {
 		}
 	}
 	return nil
+}
+
+func (API *APITitan) SendAndPrintDefaultReply(httpMethod, path string, httpData interface{}) {
+	var reqData []byte
+	var err error
+
+	reqData = nil
+	if httpData != nil {
+		reqData, err = json.Marshal(httpData)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+	}
+
+	err = API.SendAndResponse(httpMethod, path, reqData)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	if !API.HumanReadable {
+		API.PrintJson()
+	} else {
+		API.DefaultPrintReturn()
+	}
 }

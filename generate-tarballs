@@ -1,0 +1,35 @@
+#!/bin/bash 
+
+# Darwin
+mkdir -p darwin-{i386,amd64}
+CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -a -installsuffix cgo -mod=vendor
+mv ./titan-sc ./darwin-amd64
+tar czf ./darwin-amd64.tgz ./darwin-amd64
+rm -rf ./darwin-amd64
+CGO_ENABLED=0 GOOS=darwin GOARCH=386 go build -a -installsuffix cgo -mod=vendor
+mv ./titan-sc ./darwin-i386
+tar czf ./darwin-i386.tgz ./darwin-i386
+rm -rf ./darwin-i386
+
+# Windows
+mkdir -p windows-{i386,amd64}
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -a -installsuffix cgo -mod=vendor
+mv ./titan-sc.exe ./windows-amd64
+tar czf ./windows-amd64.tgz ./windows-amd64
+rm -rf ./windows-amd64
+CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -a -installsuffix cgo -mod=vendor
+mv ./titan-sc.exe ./windows-i386
+tar czf ./windows-i386.tgz ./windows-i386
+rm -rf ./windows-i386
+
+# Linux
+mkdir -p linux-{i386,amd64}
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -mod=vendor
+mv ./titan-sc ./linux-amd64
+tar czf ./linux-amd64.tgz ./linux-amd64
+rm -rf ./linux-amd64
+CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -a -installsuffix cgo -mod=vendor
+mv ./titan-sc ./linux-i386
+tar czf ./linux-i386.tgz ./linux-i386
+rm -rf ./linux-i386
+

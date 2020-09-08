@@ -1,9 +1,9 @@
 package main
 
 import (
-    "titan-sc/cmd"
+	"titan-sc/cmd"
 )
 
 func main() {
-    cmd.Execute()
+	cmd.Execute()
 }

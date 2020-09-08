@@ -112,6 +112,7 @@ Usage:
 
 Available Commands:
   company          Retrieve information about your companies.
+  firewall         Manage your networks firewall rules.
   help             Help about any command
   history          List latest events on a server or a company.
   ip               Manage IP addresses.
@@ -121,6 +122,8 @@ Available Commands:
   server           Manage servers.
   setup            Automated config/install.
   snapshot         Manage servers' snapshots.
+  ssh-key          Manage your user ssh keys.
+  user             Manage your user information.
   version          Show API or CLI version.
   weathermap       Show weather map.
 
