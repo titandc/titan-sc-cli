@@ -1,6 +1,13 @@
 
 # ChangeLog
 
+## 2.0.1
+
+- Fix servers textual rendering.
+- Fix networks list.
+- Add managed infos to companies.
+- Add firewall data to networks list.
+
 ## 2.0.0
 
 - List server addons with pricing.

@@ -46,7 +46,6 @@ var API = &APITitan{
  *
  */
 func (API *APITitan) HistoryCompanyEvent(cmd *cobra.Command, args []string) {
-
 	_ = args
 	API.ParseGlobalFlags(cmd)
 
@@ -73,7 +72,6 @@ func (API *APITitan) HistoryCompanyEvent(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) HistoryByCompany(number, companyUUID string) {
-
 	err := API.SendAndResponse(HTTPGet, "/compute/servers/events?nb="+
 		number+"&company_uuid="+companyUUID, nil)
 	if err != nil {
@@ -103,7 +101,6 @@ func (API *APITitan) HistoryByCompany(number, companyUUID string) {
 }
 
 func (API *APITitan) HistoryByServer(number, serverUUID string) {
-
 	err := API.SendAndResponse(HTTPGet, "/compute/servers/"+serverUUID+
 		"/events?nb="+number, nil)
 	if err != nil {
@@ -139,7 +136,6 @@ func (API *APITitan) HistoryByServer(number, serverUUID string) {
  *
  */
 func (API *APITitan) KVMIPGetInfos(cmd *cobra.Command, args []string) {
-
 	serverUUID := args[0]
 	API.ParseGlobalFlags(cmd)
 
@@ -170,22 +166,7 @@ func (API *APITitan) IPKvmAction(action, serverUUID string) {
 	act := APIServerAction{
 		Action: action,
 	}
-	reqData, e := json.Marshal(act)
-	if e != nil {
-		fmt.Println(e.Error())
-		return
-	}
-	err := API.SendAndResponse(HTTPPut, "/compute/servers/"+serverUUID+"/ipkvm", reqData)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	if !API.HumanReadable {
-		API.PrintJson()
-	} else {
-		API.DefaultPrintReturn()
-	}
+	API.SendAndPrintDefaultReply(HTTPPut, "/compute/servers/"+serverUUID+"/ipkvm", act)
 }
 
 func (API *APITitan) IPKvmPrint(serverUUID string) {
@@ -210,7 +191,6 @@ func (API *APITitan) IPKvmPrint(serverUUID string) {
  *
  */
 func (API *APITitan) WeatherMap(cmd *cobra.Command, args []string) {
-
 	_ = args
 	API.ParseGlobalFlags(cmd)
 
@@ -243,21 +223,19 @@ func (API *APITitan) ManagedServices(cmd *cobra.Command, args []string) {
 	managedServicesOpts := APIManagedServices{
 		Company: companyUUID,
 	}
-	reqData, err := json.Marshal(managedServicesOpts)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
+	API.SendAndPrintDefaultReply(HTTPPost, "/compute/managed_services", managedServicesOpts)
+}
+
+func (API *APITitan) IsAdmin() (bool, error) {
+	if err := API.SendAndResponse(HTTPGet, "/auth/user/isadmin", nil); err != nil {
+		return false, err
 	}
-	err = API.SendAndResponse(HTTPPost, "/compute/managed_services", reqData)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
+
+	buffer := IsAdminStruct{}
+	if err := json.Unmarshal(API.RespBody, &buffer); err != nil {
+		return false, err
 	}
-	if !API.HumanReadable {
-		API.PrintJson()
-	} else {
-		API.DefaultPrintReturn()
-	}
+	return buffer.Admin, nil
 }
 
 /*

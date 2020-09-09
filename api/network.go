@@ -149,7 +149,20 @@ func (API *APITitan) NetworkPrintBase(net *APINetwork) {
 			"  CIDR: %s\n",
 			net.Managed, net.CIDR)
 		if net.Gateway != "" {
-			fmt.Printf("  %s\n", net.Gateway)
+			fmt.Printf("  Gateway: %s\n", net.Gateway)
+		}
+		fmt.Printf("  Firewall:\n"+
+			"    Policy: %s\n",
+			net.Firewall.Policy)
+		if len(net.Firewall.Rules) > 0 {
+			fmt.Println("    Rules:")
+			for _, rule := range net.Firewall.Rules {
+				fmt.Printf("      - Server: %s\n"+
+					"        Protocol: %s\n"+
+					"        Port: %s\n"+
+					"        Source: %s\n",
+					rule.Server, rule.Protocol, rule.Port, rule.Source)
+			}
 		}
 	}
 

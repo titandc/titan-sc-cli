@@ -106,12 +106,21 @@ type APINetwork struct {
 		State string `json:"state"`
 		UUID  string `json:"uuid"`
 	} `json:"servers"`
-	Speed   APISize `json:"speed"`
-	State   string  `json:"state"`
-	UUID    string  `json:"uuid"`
-	Managed bool    `json:"managed"`
-	CIDR    string  `json:"cidr"`
-	Gateway string  `json:"gateway"`
+	Speed    APISize `json:"speed"`
+	State    string  `json:"state"`
+	UUID     string  `json:"uuid"`
+	Managed  bool    `json:"managed"`
+	CIDR     string  `json:"cidr"`
+	Gateway  string  `json:"gateway"`
+	Firewall struct {
+		Policy string `json:"policy"`
+		Rules  []struct {
+			Server   string `json:"server"`
+			Protocol string `json:"protocol"`
+			Port     string `json:"port"`
+			Source   string `json:"source"`
+		} `json:"rules"`
+	} `json:"firewall"`
 }
 
 type APINetworkList struct {
@@ -126,8 +135,13 @@ type APICompany struct {
 		UUID        string `json:"uuid"`
 	} `json:"company"`
 	Role struct {
-		Name string `json:"name"`
-	} `json:"role"`
+		Description string `json:"description"`
+		Name        string `json:"name"`
+		UUID        string `json:"uuid"`
+		Role        struct {
+			Name string `json:"name"`
+		} `json:"role"`
+	}
 }
 
 type APIServerAction struct {
@@ -231,6 +245,7 @@ type APICompanyDetail struct {
 	TvaRate   int    `json:"tva_rate"`
 	UUID      string `json:"uuid"`
 	Website   string `json:"website"`
+	Managed   bool   `json:"managed_services"`
 }
 
 type APIServerLOadISORequest struct {
@@ -367,4 +382,8 @@ type APIResetServer struct {
 	UserSSHKey      string `json:"user_ssh_key,omitempty"`
 	TemplateOS      string `json:"template_os"`
 	TemplateVersion string `json:"template_version"`
+}
+
+type IsAdminStruct struct {
+	Admin bool `json:"admin"`
 }

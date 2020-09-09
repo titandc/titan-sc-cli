@@ -21,22 +21,48 @@ func (API *APITitan) CompaniesList(cmd *cobra.Command, args []string) {
 	_ = args
 	API.ParseGlobalFlags(cmd)
 
-	if compagnies, err := API.GetCompagnies(); err != nil {
+	isAdmin, err := API.IsAdmin()
+	if err != nil {
+		fmt.Println("Get Isadmin:", err.Error())
+		return
+	}
+	if err := API.SendAndResponse(HTTPGet, "/companies", nil); err != nil {
 		fmt.Println(err.Error())
+		return
+	}
+
+	if !API.HumanReadable {
+		API.PrintJson()
 	} else {
-		if !API.HumanReadable {
-			API.PrintJson()
-		} else {
-			w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-			_, _ = fmt.Fprintf(w, "COMPANY UUID\tNAME\tROLE\t\n")
-			for _, company := range compagnies {
-				_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t\n",
-					company.Company.UUID, company.Company.Name, company.Role.Name)
-				_ = w.Flush()
-			}
+		if err := API.PrintCompagnies(isAdmin); err != nil {
+			fmt.Println(err.Error())
 		}
 	}
-	return
+}
+
+func (API *APITitan) PrintCompagnies(isAdmin bool) error {
+	compagnies := make([]APICompany, 0)
+	if err := json.Unmarshal(API.RespBody, &compagnies); err != nil {
+		return err
+	}
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+	if !isAdmin {
+		_, _ = fmt.Fprintf(w, "COMPANY UUID\tNAME\tROLE\t\n")
+	} else {
+		_, _ = fmt.Fprintf(w, "COMPANY UUID\tNAME\t\n")
+	}
+	for _, company := range compagnies {
+		if !isAdmin {
+			_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t\n",
+				company.Company.UUID, company.Company.Name, company.Role.Name)
+		} else {
+			_, _ = fmt.Fprintf(w, "%s\t%s\t\n",
+				company.Company.UUID, company.Company.Name)
+		}
+		_ = w.Flush()
+	}
+	return nil
 }
 
 func (API *APITitan) CompanyDetail(cmd *cobra.Command, args []string) {
@@ -60,6 +86,7 @@ func (API *APITitan) CompanyDetail(cmd *cobra.Command, args []string) {
 		fmt.Printf("Company %s informations:\n", company.Name)
 		fmt.Printf("  UUID: %s\n"+
 			"  Phone: %s\n"+
+			"  Managed: %t\n"+
 			"  Description: %s\n"+
 			"  Email: %s\n"+
 			"  CA: %d\n"+
@@ -73,7 +100,7 @@ func (API *APITitan) CompanyDetail(cmd *cobra.Command, args []string) {
 			"    CPUs: %d\n"+
 			"    Networks: %d\n"+
 			"    Servers: %d\n",
-			company.UUID, company.Phone,
+			company.UUID,  company.Phone, company.Managed,
 			company.Description, company.Email, company.CA,
 			company.Naf, company.Siret, company.TvaNumber,
 			company.TvaRate, company.Note, company.Website,
@@ -102,18 +129,6 @@ func (API *APITitan) CompanyDetail(cmd *cobra.Command, args []string) {
 				member.Email, member.Phone, member.UUID)
 		}
 	}
-}
-
-func (API *APITitan) GetCompagnies() ([]APICompany, error) {
-	if err := API.SendAndResponse(HTTPGet, "/companies", nil); err != nil {
-		return nil, err
-	}
-
-	compagnies := make([]APICompany, 0)
-	if err := json.Unmarshal(API.RespBody, &compagnies); err != nil {
-		return nil, err
-	}
-	return compagnies, nil
 }
 
 func (API *APITitan) GetCompanyServers(companyUUID string) ([]APIServer, error) {

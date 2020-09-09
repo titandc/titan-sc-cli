@@ -67,40 +67,59 @@ func (API *APITitan) ServerList(cmd *cobra.Command, args []string) {
 	API.ParseGlobalFlags(cmd)
 	companyUUID, _ := cmd.Flags().GetString("company-uuid")
 
-	if compagnies, err := API.GetCompagnies(); err != nil {
+	if err := API.SendAndResponse(HTTPGet, "/companies", nil); err != nil {
+		fmt.Println("Get Isadmin:", err.Error())
+		return
+	}
+
+	var w *tabwriter.Writer
+	if API.HumanReadable {
+		w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+		_, _ = fmt.Fprintf(w, "COMPANY\tUUID\tPLAN\tSTATE\tOS\tNAME\tMANAGED\t\n")
+	}
+
+	compagnies := make([]APICompany, 0)
+	if err := json.Unmarshal(API.RespBody, &compagnies); err != nil {
 		fmt.Println(err.Error())
-	} else {
-		var w *tabwriter.Writer
-		if API.HumanReadable {
-			w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		}
+		return
+	}
 
-		for _, company := range compagnies {
-			if companyUUID == "" || (companyUUID != "" && companyUUID == company.Company.UUID) {
-				servers, err := API.GetCompanyServers(company.Company.UUID)
-				if err != nil {
-					fmt.Println(err.Error())
-					return
-				}
-
-				if !API.HumanReadable {
-					API.PrintJson()
-				} else {
-					_, _ = fmt.Fprintf(w, "UUID\tPLAN\tSTATE\tOS\tNAME\tMANAGED\t\n")
-					for _, server := range servers {
-						state := API.ServerStateSetColor(server.State)
-						_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%t\t\n",
-							server.UUID, server.Plan, state, server.OS, server.Name, server.Managed)
-					}
-					_ = w.Flush()
-				}
+	for _, company := range compagnies {
+		if companyUUID == "" || (companyUUID != "" && companyUUID == company.Company.UUID) {
+			if err := API.ServersListPrintByCompany(company.Company.UUID, company.Company.Name, w); err != nil {
+				fmt.Println(err.Error())
+				return
 			}
 		}
 	}
+
+	if API.HumanReadable {
+		_ = w.Flush()
+	}
+}
+
+func (API *APITitan) ServersListPrintByCompany(companyUUID, companyName string, w *tabwriter.Writer) error {
+	servers, err := API.GetCompanyServers(companyUUID)
+	if err != nil {
+		return err
+	}
+
+	if !API.HumanReadable {
+		API.PrintJson()
+	} else {
+		for i, server := range servers {
+			state := API.ServerStateSetColor(server.State)
+			_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%t\t\n",
+				companyName, server.UUID, server.Plan, state, server.OS, server.Name, server.Managed)
+			if i == 0 {
+				companyName = ""
+			}
+		}
+	}
+	return nil
 }
 
 func (API *APITitan) ServerDetail(cmd *cobra.Command, args []string) {
-
 	serverUUID := args[0]
 	API.ParseGlobalFlags(cmd)
 
@@ -114,11 +133,9 @@ func (API *APITitan) ServerDetail(cmd *cobra.Command, args []string) {
 	} else {
 		API.PrintServerDetail(server)
 	}
-
 }
 
 func (API *APITitan) ShowServerDetail(cmd *cobra.Command, args []string) {
-
 	serverUUID := args[0]
 	API.ParseGlobalFlags(cmd)
 
@@ -171,7 +188,6 @@ func (API *APITitan) ServerStateAction(state, serverUUID string) {
 }
 
 func (API *APITitan) GetServerUUID(serverUUID string) (*APIServer, error) {
-
 	err := API.SendAndResponse(HTTPGet, "/compute/servers/"+serverUUID, nil)
 	if err != nil {
 		return nil, err
