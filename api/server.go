@@ -67,61 +67,74 @@ func (API *APITitan) ServerList(cmd *cobra.Command, args []string) {
 	API.ParseGlobalFlags(cmd)
 	companyUUID, _ := cmd.Flags().GetString("company-uuid")
 
-	if err := API.SendAndResponse(HTTPGet, "/companies", nil); err != nil {
-		fmt.Println("Get Isadmin:", err.Error())
-		return
-	}
-
-	var w *tabwriter.Writer
-	if API.HumanReadable {
-		w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		_, _ = fmt.Fprintf(w, "COMPANY\tUUID\tPLAN\tSTATE\tOS\tNAME\tMANAGED\t\n")
-	}
-
-	compagnies := make([]APICompany, 0)
-	if err := json.Unmarshal(API.RespBody, &compagnies); err != nil {
+	err := API.SendAndResponse(HTTPGet, "/compute/servers/detail?company_uuid="+companyUUID, nil)
+	if err != nil {
 		fmt.Println(err.Error())
 		return
-	}
-
-	for _, company := range compagnies {
-		if companyUUID == "" || (companyUUID != "" && companyUUID == company.Company.UUID) {
-			if err := API.ServersListPrintByCompany(company.Company.UUID, company.Company.Name, w); err != nil {
-				fmt.Println(err.Error())
-				return
-			}
-		}
-	}
-
-	if API.HumanReadable {
-		_ = w.Flush()
-	}
-}
-
-func (API *APITitan) ServersListPrintByCompany(companyUUID, companyName string, w *tabwriter.Writer) error {
-	servers, err := API.GetCompanyServers(companyUUID)
-	if err != nil {
-		return err
 	}
 
 	if !API.HumanReadable {
 		API.PrintJson()
 	} else {
-		for i, server := range servers {
+		var servers []APIServer
+
+		if err := json.Unmarshal(API.RespBody, &servers); err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		var w *tabwriter.Writer
+		w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+		_, _ = fmt.Fprintf(w, "COMPANY\tUUID\tPLAN\tSTATE\tOS\tNAME\tMANAGED\t\n")
+
+		for _, server := range servers {
 			state := API.ServerStateSetColor(server.State)
 			_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%t\t\n",
-				companyName, server.UUID, server.Plan, state, server.OS, server.Name, server.Managed)
-			if i == 0 {
-				companyName = ""
-			}
+				server.CompanyName, server.UUID, server.Plan, state, server.Template,
+				server.Name, server.Managed)
 		}
+		_ = w.Flush()
 	}
-	return nil
 }
 
+/* For print server list company by company
+		companyPrinted := []string{}
+		var w *tabwriter.Writer
+		w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+		_, _ = fmt.Fprintf(w, "COMPANY\tUUID\tPLAN\tSTATE\tOS\tNAME\tMANAGED\t\n")
+		for _, server := range servers {
+			companyName := server.CompanyName
+			companyNamePrint := companyName
+			if !API.ServerListByCompanyAlreadyPrinted(server.CompanyName, companyPrinted) {
+				for _, reserver := range servers {
+					if reserver.CompanyName == companyName {
+						state := API.ServerStateSetColor(server.State)
+						_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%t\t\n",
+							companyNamePrint, reserver.UUID, reserver.Plan, state, reserver.Template,
+							reserver.Name, reserver.Managed)
+						companyNamePrint = ""
+					}
+				}
+				companyPrinted = append(companyPrinted, companyName)
+			}
+		}
+		_ = w.Flush()
+	}
+}
+func (API *APITitan) ServerListByCompanyAlreadyPrinted(companyName string, printed []string) bool {
+	for _, company := range printed {
+		if company == companyName {
+			return true
+		}
+	}
+	return false
+}
+*/
+
 func (API *APITitan) ServerDetail(cmd *cobra.Command, args []string) {
-	serverUUID := args[0]
+	_ = args
 	API.ParseGlobalFlags(cmd)
+	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 
 	server, err := API.GetServerUUID(serverUUID)
 	if err != nil {
@@ -136,8 +149,9 @@ func (API *APITitan) ServerDetail(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) ShowServerDetail(cmd *cobra.Command, args []string) {
-	serverUUID := args[0]
+	_ = args
 	API.ParseGlobalFlags(cmd)
+	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 
 	if server, err := API.GetServerUUID(serverUUID); err != nil {
 		fmt.Println(err)
@@ -151,27 +165,34 @@ func (API *APITitan) ShowServerDetail(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) ServerStart(cmd *cobra.Command, args []string) {
+	_ = args
 	API.ParseGlobalFlags(cmd)
-	API.ServerStateAction("start", args[0])
+	serverUUID, _ := cmd.Flags().GetString("server-uuid")
+	API.ServerStateAction("start", serverUUID)
 }
 
 func (API *APITitan) ServerStop(cmd *cobra.Command, args []string) {
+	_ = args
 	API.ParseGlobalFlags(cmd)
-	API.ServerStateAction("stop", args[0])
+	serverUUID, _ := cmd.Flags().GetString("server-uuid")
+	API.ServerStateAction("stop", serverUUID)
 }
 
 func (API *APITitan) ServerRestart(cmd *cobra.Command, args []string) {
+	_ = args
 	API.ParseGlobalFlags(cmd)
-	API.ServerStateAction("reboot", args[0])
+	serverUUID, _ := cmd.Flags().GetString("server-uuid")
+	API.ServerStateAction("reboot", serverUUID)
 }
 
 func (API *APITitan) ServerHardstop(cmd *cobra.Command, args []string) {
+	_ = args
 	API.ParseGlobalFlags(cmd)
-	API.ServerStateAction("hardstop", args[0])
+	serverUUID, _ := cmd.Flags().GetString("server-uuid")
+	API.ServerStateAction("hardstop", serverUUID)
 }
 
 func (API *APITitan) ServerStateAction(state, serverUUID string) {
-
 	// check server exist
 	server, err := API.GetServerUUID(serverUUID)
 	if err != nil {
@@ -287,7 +308,6 @@ func (API *APITitan) ServerStateSetColor(state string) string {
 }
 
 func (API *APITitan) ServerLoadISO(cmd *cobra.Command, args []string) {
-
 	_ = args
 	API.ParseGlobalFlags(cmd)
 	uriISO, _ := cmd.Flags().GetString("uri")
@@ -302,8 +322,9 @@ func (API *APITitan) ServerLoadISO(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) ServerUnloadISO(cmd *cobra.Command, args []string) {
+	_ = args
 	API.ParseGlobalFlags(cmd)
-	serverUUID := args[0]
+	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 	path := "/compute/servers/" + serverUUID + "/iso"
 	API.SendAndPrintDefaultReply(HTTPDelete, path, nil)
 }
@@ -346,11 +367,11 @@ func (API *APITitan) ServerCreate(cmd *cobra.Command, args []string) {
 			return
 		}
 	default:
-		fmt.Println("Invalid --plan value !\nHelper: argument --plan only value accepted: SC1 SC2 SC3")
+		fmt.Println("Invalid --plan value !\nHelper: argument --plan only value accepted: SC1 SC2 SC3.")
 		return
 	}
 
-	allAddons := []APIInstallAddonsAddon{}
+	var allAddons []APIInstallAddonsAddon
 	if DiskAddonsNumber > 0 || RamAddonsNumber > 0 || CpuAddonsNumber > 0 {
 		addons, err := API.GetAllAddons()
 		if err != nil {
@@ -388,7 +409,7 @@ func (API *APITitan) ServerCreate(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	servers := make([]*APICreateServers, 0)
+	var servers []*APICreateServers
 	servers = append(servers, server)
 	API.SendAndPrintDefaultReply(HTTPPost, "/compute/servers", servers)
 }
@@ -411,22 +432,23 @@ func (API *APITitan) ServerCreateAddAddonInArray(addonsList []APIAddonsItem,
 func (API *APITitan) ServerCheckAddonsNumber(cpuAddonsNumber, ramAddonsNumber, diskAddonsNumber,
 	cpuMax, ramMax, diskMax int, plan string) error {
 	if cpuAddonsNumber > cpuMax {
-		return fmt.Errorf("Error: %s max CPU addons is %d", plan, cpuMax)
+		return fmt.Errorf("Error: %s max CPU addons is %d.", plan, cpuMax)
 	}
 
 	if ramAddonsNumber > ramMax {
-		return fmt.Errorf("Error: %s max RAM addons is %d", plan, ramMax)
+		return fmt.Errorf("Error: %s max RAM addons is %d.", plan, ramMax)
 	}
 
 	if diskAddonsNumber > diskMax {
-		return fmt.Errorf("Error: %s max disk size addons is %d", plan, diskMax)
+		return fmt.Errorf("Error: %s max disk size addons is %d.", plan, diskMax)
 	}
 	return nil
 }
 
 func (API *APITitan) ServerDelete(cmd *cobra.Command, args []string) {
+	_ = args
 	API.ParseGlobalFlags(cmd)
-	serverUUID := args[0]
+	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 	API.SendAndPrintDefaultReply(HTTPDelete, "/compute/servers/"+serverUUID, nil)
 }
 
@@ -460,7 +482,7 @@ func (API *APITitan) ServerGetTemplates() ([]APITemplateFullInfos, error) {
 		return nil, err
 	}
 
-	templates := []APITemplateFullInfos{}
+	var templates []APITemplateFullInfos
 	if API.HumanReadable {
 		err := json.Unmarshal(API.RespBody, &templates)
 		if err != nil {
@@ -472,8 +494,9 @@ func (API *APITitan) ServerGetTemplates() ([]APITemplateFullInfos, error) {
 }
 
 func (API *APITitan) ServerReset(cmd *cobra.Command, args []string) {
+	_ = args
 	API.ParseGlobalFlags(cmd)
-	serverUUID := args[0]
+	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 
 	serverReset := &APIResetServer{}
 	sshKeys, _ := cmd.Flags().GetString("ssh-keys-name")
@@ -498,12 +521,12 @@ func (API *APITitan) ServerSearchAndConcatSSHKeys(sshKeys string) (string, error
 		return "", err
 	}
 
-	sshKey := ""
+	sshKeysContent := ""
 	for _, keyRequest := range strings.Split(sshKeys, ",") {
 		find := false
 		for _, keyExist := range sshKeysList {
 			if keyExist.Title == keyRequest {
-				sshKey += keyExist.Content + "\n"
+				sshKeysContent += keyExist.Content + "\n"
 				find = true
 				break
 			}
@@ -511,8 +534,8 @@ func (API *APITitan) ServerSearchAndConcatSSHKeys(sshKeys string) (string, error
 
 		// Check if ssh key find
 		if !find {
-			return "", fmt.Errorf("SSH keys name <%s> not found\n", keyRequest)
+			return "", fmt.Errorf("SSH keys name <%s> not found.\n", keyRequest)
 		}
 	}
-	return sshKeys, nil
+	return sshKeysContent, nil
 }

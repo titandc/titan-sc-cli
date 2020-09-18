@@ -14,10 +14,10 @@ func (API *APITitan) IPAttach(cmd *cobra.Command, args []string) {
 	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 	ip, _ := cmd.Flags().GetString("ip")
 
-	ipOpt := APIIP{
+	ipOpt := []APIIPAttachDetach{{
 		IP:      ip,
 		Version: 4,
-	}
+	}}
 	API.SendAndPrintDefaultReply(HTTPPost, "/compute/servers/"+serverUUID+"/ips", ipOpt)
 }
 
@@ -27,7 +27,7 @@ func (API *APITitan) IPDetach(cmd *cobra.Command, args []string) {
 	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 	ip, _ := cmd.Flags().GetString("ip")
 
-	ipOpt := APIIP{
+	ipOpt := APIIPAttachDetach{
 		IP:      ip,
 		Version: 4,
 	}
@@ -35,6 +35,7 @@ func (API *APITitan) IPDetach(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) IPsList(cmd *cobra.Command, args []string) {
+	_ = args
 	API.ParseGlobalFlags(cmd)
 
 	err := API.SendAndResponse(HTTPGet, "/compute/ips", nil)
@@ -44,7 +45,7 @@ func (API *APITitan) IPsList(cmd *cobra.Command, args []string) {
 	if !API.HumanReadable {
 		API.PrintJson()
 	} else {
-		APIIP := make([]APIIP, 0)
+		APIIP := make([]APIIPAttachDetach, 0)
 		if err := json.Unmarshal(API.RespBody, &APIIP); err != nil {
 			fmt.Println(err.Error())
 			return
@@ -54,9 +55,10 @@ func (API *APITitan) IPsList(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) IPsCompanyList(cmd *cobra.Command, args []string) {
+	_ = args
 	API.ParseGlobalFlags(cmd)
+	companyUUID, _ := cmd.Flags().GetString("company-uuid")
 
-	companyUUID := args[0]
 	err := API.SendAndResponse(HTTPGet, "/companies/"+companyUUID+"/ips", nil)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -64,7 +66,8 @@ func (API *APITitan) IPsCompanyList(cmd *cobra.Command, args []string) {
 	if !API.HumanReadable {
 		API.PrintJson()
 	} else {
-		APIIP := make([]APIIP, 0)
+		var APIIP []APIIPAttachDetach
+
 		if err := json.Unmarshal(API.RespBody, &APIIP); err != nil {
 			fmt.Println(err.Error())
 			return
@@ -73,17 +76,14 @@ func (API *APITitan) IPsCompanyList(cmd *cobra.Command, args []string) {
 	}
 }
 
-func (API *APITitan) IPsPrint(ipArray *[]APIIP) {
-
+func (API *APITitan) IPsPrint(ipArray *[]APIIPAttachDetach) {
 	if len(*ipArray) == 0 {
 		fmt.Println("Empty IPs list")
 		return
 	}
 
 	var w *tabwriter.Writer
-	if API.HumanReadable {
-		w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	}
+	w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 
 	_, _ = fmt.Fprintf(w, "IP\tVERSION\t\n")
 	for _, ip := range *ipArray {

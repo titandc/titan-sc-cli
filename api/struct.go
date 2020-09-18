@@ -258,9 +258,25 @@ type APIReturn struct {
 	Error   string `json:"error,omitempty"`
 }
 
-type APIIP struct {
+type APIIPAttachDetach struct {
 	IP      string `json:"ip"`
 	Version int    `json:"type"`
+}
+
+type APIPNATRuleInfos struct {
+	IP          string `json:"ip" binding:"required"`
+	Transparent bool   `json:"transparent,omitempty"`
+	Protocol    string `json:"protocol,omitempty"`
+	PortSrc     int64  `json:"port_src,omitempty"`
+	PortDst     int64  `json:"port_dst,omitempty"`
+}
+
+type APIPNATRuleAddDel struct {
+	IP          string `json:"ip" binding:"required"`
+	Transparent bool   `json:"transparent"`
+	Protocol    string `json:"protocol"`
+	PortSrc     int64  `json:"port_src"`
+	PortDst     int64  `json:"port_dst"`
 }
 
 type APIVersion struct {

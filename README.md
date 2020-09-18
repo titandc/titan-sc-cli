@@ -15,7 +15,7 @@ The project uses go vendoring mode (aka. vgo) for dependencies management.
 
 #### Instructions
 
-```
+```shell script
 git clone https://github.com/titandc/titan-sc-cli.git
 cd titan-sc-cli
 go mod vendor
@@ -41,7 +41,7 @@ You must first generate an API token from the [Titan SC dashboard](https://sc.ti
 
 Run the following command to automatically setup your environment (replace `your token` by the API key previously generated):
 
-```
+```shell script
 ./titan-sc setup "your token"
 ```
 
@@ -69,7 +69,7 @@ token = "your token"
 
 You can update it manually by replacing `your token` with the content of your API key and rename it as `config`, here is an example for Linux/Mac:
 
-```
+```shell script
 TOKEN="..."
 mkdir -p ~/.titan
 sed "s/your token/${TOKEN}/g" ./config.sample > ~/.titan/config
@@ -87,7 +87,7 @@ You can therefore override the confguration file by exporting the environment va
 
 Export the environment variable (replace `your token` by the content of your API key):
 
-```
+```shell script
 export TITAN_API_TOKEN="your token"
 ```
 
@@ -97,6 +97,76 @@ _Note_: This can also be added to your shell configuration file (eg. for bash: `
 2) __On Windows__
 
 You can follow [this guide](https://www.computerhope.com/issues/ch000549.htm) to create an environment variable on Windows.
+
+## Command-line completion
+
+Command-line completion for commands and options are supported with the following shells:
+
+- Bash
+- Zsh
+- Fish
+- Powershell
+
+### Bash
+
+First make sure to have the package `bash-completion` installed on your system.
+
+```shell script
+source <(titan-sc completion bash)
+```
+
+To load completions for each session, execute once:
+
+##### Linux:
+
+```shell script
+titan-sc completion bash > /etc/bash_completion.d/titan-sc
+```
+
+##### MacOS:
+
+```shell script
+titan-sc completion bash > /usr/local/etc/bash_completion.d/titan-sc
+```
+
+### Zsh
+
+If shell completion is not already enabled in your environment you will need to enable it.  You can execute the following once:
+
+```shell script
+echo "autoload -U compinit; compinit" >> ~/.zshrc
+```
+
+To load completions for each session, execute once:
+
+```shell script
+titan-sc completion zsh > "${fpath[1]}/_titan-sc"
+```
+
+You will need to start a new shell for this setup to take effect.
+
+### Fish
+
+```shell script
+titan-sc completion fish | source
+```
+
+To load completions for each session, execute once:
+
+```shell script
+titan-sc completion fish > ~/.config/fish/completions/titan-sc.fish
+```
+
+### Powershell
+
+You need PowerShell version 5.0 or above, which comes with Windows 10 and can be downloaded separately for Windows 7 or 8.1. You can then source the completion file from your PowerShell profile, which is referenced by the `$Profile` environment variable. Execute `Get-Help about_Profiles` for more info about PowerShell profiles.
+
+Generate the completion file:
+
+```shell script
+titan-sc completion powershell > completion_file
+```
+
 
 ## Usage
 
@@ -112,6 +182,7 @@ Usage:
 
 Available Commands:
   company          Retrieve information about your companies.
+  completion       Generate completion script
   firewall         Manage your networks firewall rules.
   help             Help about any command
   history          List latest events on a server or a company.
@@ -119,6 +190,7 @@ Available Commands:
   kvmip            Manage servers' KVM IP.
   managed-services Enable managed services.
   network          Manage private networks.
+  port-nat         Manage PNAT rules.
   server           Manage servers.
   setup            Automated config/install.
   snapshot         Manage servers' snapshots.
@@ -133,6 +205,7 @@ Flags:
   -H, --human   Format output for human.
 
 Use "titan-sc [command] --help" for more information about a command.
+
 ```
 
 Get (sub)commands help:

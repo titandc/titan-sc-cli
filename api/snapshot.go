@@ -19,9 +19,9 @@ import (
  *
  */
 func (API *APITitan) SnapshotList(cmd *cobra.Command, args []string) {
-
-	serverUUID := args[0]
+	_ = args
 	API.ParseGlobalFlags(cmd)
+	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 
 	snapshots, err := API.SnapshotServerUUIDList(serverUUID)
 	if err != nil {
@@ -46,9 +46,9 @@ func (API *APITitan) SnapshotList(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) SnapshotCreate(cmd *cobra.Command, args []string) {
-
-	serverUUID := args[0]
+	_ = args
 	API.ParseGlobalFlags(cmd)
+	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 
 	err := API.SendAndResponse(HTTPPost, "/compute/servers/"+serverUUID+"/snapshots", nil)
 	if err != nil {
@@ -70,24 +70,11 @@ func (API *APITitan) SnapshotCreate(cmd *cobra.Command, args []string) {
 	}
 }
 
-func (API *APITitan) SnapshotRemove(cmd *cobra.Command, args []string) {
-
+func (API *APITitan) SnapshotDelete(cmd *cobra.Command, args []string) {
 	_ = args
 	API.ParseGlobalFlags(cmd)
-
 	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 	snapUUID, _ := cmd.Flags().GetString("snapshot-uuid")
-
-	if snapUUID == "" {
-		fmt.Println("Error: Snapshot UUID missing.\n" +
-			"Example: ./titan-sc snap rm --server-uuid SERVER_UUID --snapshot-uuid SNAP_UUID")
-		return
-	}
-	if serverUUID == "" {
-		fmt.Println("Error: Server UUID missing.\n" +
-			"Example: ./titan-sc snap rm --server-uuid SERVER_UUID --snapshot-uuid SNAP_UUID")
-		return
-	}
 
 	snapshots, err := API.SnapshotServerUUIDList(serverUUID)
 	if err != nil {
@@ -119,7 +106,7 @@ func (API *APITitan) SnapshotServerUUIDList(serverUUID string) ([]APISnapshot, e
 		return nil, err
 	}
 
-	snap := make([]APISnapshot, 0)
+	var snap []APISnapshot
 	if err := json.Unmarshal(API.RespBody, &snap); err != nil {
 		return nil, err
 	}

@@ -35,7 +35,8 @@ func (API *APITitan) AddonsListAll(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) GetAllAddons() ([]APIAddonsItem, error) {
-	addons := []APIAddonsItem{}
+	var addons []APIAddonsItem
+
 	if err := API.SendAndResponse(HTTPGet, "/compute/addons", nil); err != nil {
 		return nil, err
 	}

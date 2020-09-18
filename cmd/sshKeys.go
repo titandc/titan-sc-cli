@@ -20,19 +20,17 @@ var sshKeysList = &cobra.Command{
 }
 
 var sshKeyAdd = &cobra.Command{
-	Use:   "add --name \"NAME\" SSH_KEYS_VALUE",
+	Use:   "add --name \"NAME\" --value \"SSH_KEYS_VALUE\"",
 	Short: "Add one ssh key.",
 	Long:  "Add one ssh key\nNeed name and ssh key value.",
-	Args:  cmdNeed1Args,
 	Run:   API.SSHKeyAdd,
 }
 
 var sshKeyDel = &cobra.Command{
-	Use:     "delete \"SSH_KEY_NAME\"",
+	Use:     "delete --name \"SSH_KEY_NAME\"",
 	Aliases: []string{"del"},
 	Short:   "Delete one ssh key by name.",
 	Long:    "Delete one ssh key by name.",
-	Args:    cmdNeed1Args,
 	Run:     API.SSHKeyDel,
 }
 
@@ -41,5 +39,10 @@ func sshKeysCmdAdd() {
 	sshKeys.AddCommand(sshKeysList, sshKeyAdd, sshKeyDel)
 
 	sshKeyAdd.Flags().StringP("name", "n", "", "Name of ssh KEY.")
+	sshKeyAdd.Flags().StringP("value", "v", "", "value of ssh KEY.")
 	_ = sshKeyAdd.MarkFlagRequired("name")
+	_ = sshKeyAdd.MarkFlagRequired("value")
+
+	sshKeyDel.Flags().StringP("name", "n", "", "Name of ssh KEY.")
+	_ = sshKeyDel.MarkFlagRequired("name")
 }

@@ -18,7 +18,7 @@ func (API *APITitan) SSHKeysList(cmd *cobra.Command, args []string) {
 	if !API.HumanReadable {
 		API.PrintJson()
 	} else {
-		sshKeys := []APIUserSSHKey{}
+		sshKeys := make([]APIUserSSHKey, 0)
 		if err := json.Unmarshal(API.RespBody, &sshKeys); err != nil {
 			fmt.Println(err.Error())
 			return
@@ -37,7 +37,8 @@ func (API *APITitan) SSHKeysGet() ([]APIUserSSHKey, error) {
 	if err := API.SendAndResponse(HTTPGet, "/auth/user/sshkeys", nil); err != nil {
 		return nil, err
 	}
-	sshKeys := []APIUserSSHKey{}
+
+	var sshKeys []APIUserSSHKey
 	if err := json.Unmarshal(API.RespBody, &sshKeys); err != nil {
 		fmt.Println(err.Error())
 		return nil, err
@@ -59,8 +60,9 @@ func (API *APITitan) SSHKeysPrint(sshKeys []APIUserSSHKey, sshkeySize int, ident
 }
 
 func (API *APITitan) SSHKeyAdd(cmd *cobra.Command, args []string) {
-	value := args[0]
+	_ = args
 	name, _ := cmd.Flags().GetString("name")
+	value, _ := cmd.Flags().GetString("value")
 	API.ParseGlobalFlags(cmd)
 
 	addSSHKey := APIAddUserSSHKey{
@@ -71,9 +73,9 @@ func (API *APITitan) SSHKeyAdd(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) SSHKeyDel(cmd *cobra.Command, args []string) {
-	_ = cmd
-	name := args[0]
+	_ = args
 	API.ParseGlobalFlags(cmd)
+	name, _ := cmd.Flags().GetString("name")
 
 	delSSHKey := APIDeleteUserSSHKey{
 		Name: name,

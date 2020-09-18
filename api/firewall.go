@@ -9,8 +9,9 @@ import (
 )
 
 func (API *APITitan) FirewallAddRule(cmd *cobra.Command, args []string) {
+	_ = args
 	API.ParseGlobalFlags(cmd)
-	networkUUID := args[0]
+	networkUUID, _ := cmd.Flags().GetString("network-uuid")
 	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 	protocol, _ := cmd.Flags().GetString("protocol")
 	port, _ := cmd.Flags().GetString("port")
@@ -27,8 +28,9 @@ func (API *APITitan) FirewallAddRule(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) FirewallDelRule(cmd *cobra.Command, args []string) {
+	_ = args
 	API.ParseGlobalFlags(cmd)
-	networkUUID := args[0]
+	networkUUID, _ := cmd.Flags().GetString("network-uuid")
 	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 	protocol, _ := cmd.Flags().GetString("protocol")
 	port, _ := cmd.Flags().GetString("port")
@@ -45,8 +47,9 @@ func (API *APITitan) FirewallDelRule(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) FirewallListRules(cmd *cobra.Command, args []string) {
+	_ = args
 	API.ParseGlobalFlags(cmd)
-	networkUUID := args[0]
+	networkUUID, _ := cmd.Flags().GetString("network-uuid")
 
 	err := API.SendAndResponse(HTTPGet, "/compute/networks/"+networkUUID+"/firewall", nil)
 	if err != nil {

@@ -48,7 +48,6 @@ var API = &APITitan{
 func (API *APITitan) HistoryCompanyEvent(cmd *cobra.Command, args []string) {
 	_ = args
 	API.ParseGlobalFlags(cmd)
-
 	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 	companyUUID, _ := cmd.Flags().GetString("company-uuid")
 	number, _ := cmd.Flags().GetInt("number")
@@ -72,8 +71,8 @@ func (API *APITitan) HistoryCompanyEvent(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) HistoryByCompany(number, companyUUID string) {
-	err := API.SendAndResponse(HTTPGet, "/compute/servers/events?nb="+
-		number+"&company_uuid="+companyUUID, nil)
+	path := "/compute/servers/events?nb="+number+"&company_uuid="+companyUUID
+	err := API.SendAndResponse(HTTPGet, path, nil)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -82,7 +81,8 @@ func (API *APITitan) HistoryByCompany(number, companyUUID string) {
 	if !API.HumanReadable {
 		API.PrintJson()
 	} else {
-		history := make([]APIHistoryEvent, 0)
+		var history []APIHistoryEvent
+
 		if err := json.Unmarshal(API.RespBody, &history); err != nil {
 			fmt.Println(err.Error())
 			return
@@ -101,8 +101,8 @@ func (API *APITitan) HistoryByCompany(number, companyUUID string) {
 }
 
 func (API *APITitan) HistoryByServer(number, serverUUID string) {
-	err := API.SendAndResponse(HTTPGet, "/compute/servers/"+serverUUID+
-		"/events?nb="+number, nil)
+	path := "/compute/servers/"+serverUUID+"/events?nb="+number
+	err := API.SendAndResponse(HTTPGet, path, nil)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -111,7 +111,7 @@ func (API *APITitan) HistoryByServer(number, serverUUID string) {
 	if !API.HumanReadable {
 		API.PrintJson()
 	} else {
-		history := make([]APIHistoryEvent, 0)
+		var history []APIHistoryEvent
 		if err := json.Unmarshal(API.RespBody, &history); err != nil {
 			fmt.Println(err.Error())
 			return
@@ -136,8 +136,9 @@ func (API *APITitan) HistoryByServer(number, serverUUID string) {
  *
  */
 func (API *APITitan) KVMIPGetInfos(cmd *cobra.Command, args []string) {
-	serverUUID := args[0]
+	_ = args
 	API.ParseGlobalFlags(cmd)
+	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 
 	err := API.SendAndResponse(HTTPGet, "/compute/servers/"+serverUUID+"/ipkvm", nil)
 	if err != nil {
@@ -153,16 +154,19 @@ func (API *APITitan) KVMIPGetInfos(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) KVMIPStart(cmd *cobra.Command, args []string) {
-	API.ParseGlobalFlags(cmd)
-	API.IPKvmAction("start", args[0])
+	_ = args
+	API.IPKvmAction("start", cmd)
 }
 
 func (API *APITitan) KVMIPStop(cmd *cobra.Command, args []string) {
-	API.ParseGlobalFlags(cmd)
-	API.IPKvmAction("stop", args[0])
+	_ = args
+	API.IPKvmAction("stop", cmd)
 }
 
-func (API *APITitan) IPKvmAction(action, serverUUID string) {
+func (API *APITitan) IPKvmAction(action string, cmd *cobra.Command) {
+	API.ParseGlobalFlags(cmd)
+	serverUUID, _ := cmd.Flags().GetString("server-uuid")
+
 	act := APIServerAction{
 		Action: action,
 	}
@@ -218,8 +222,10 @@ func (API *APITitan) WeatherMap(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) ManagedServices(cmd *cobra.Command, args []string) {
+	_ = args
 	API.ParseGlobalFlags(cmd)
-	companyUUID := args[0]
+	companyUUID, _ := cmd.Flags().GetString("company-uuid")
+
 	managedServicesOpts := APIManagedServices{
 		Company: companyUUID,
 	}
@@ -332,7 +338,7 @@ func (API *APITitan) SendAndResponse(method, path string, req []byte) error {
 	err = json.Unmarshal(API.RespBody, APIRet)
 	if err == nil && APIRet.Error != "" {
 		if API.HumanReadable {
-			return fmt.Errorf("Error: %s", APIRet.Error)
+			return fmt.Errorf("Error: %s.", APIRet.Error)
 		} else {
 			return fmt.Errorf(string(API.RespBody))
 		}

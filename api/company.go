@@ -41,7 +41,8 @@ func (API *APITitan) CompaniesList(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) PrintCompagnies(isAdmin bool) error {
-	compagnies := make([]APICompany, 0)
+	var compagnies []APICompany
+
 	if err := json.Unmarshal(API.RespBody, &compagnies); err != nil {
 		return err
 	}
@@ -66,8 +67,9 @@ func (API *APITitan) PrintCompagnies(isAdmin bool) error {
 }
 
 func (API *APITitan) CompanyDetail(cmd *cobra.Command, args []string) {
-	companyUUID := args[0]
+	_ = args
 	API.ParseGlobalFlags(cmd)
+	companyUUID, _ := cmd.Flags().GetString("company-uuid")
 
 	err := API.SendAndResponse(HTTPGet, "/companies/"+companyUUID, nil)
 	if err != nil {
@@ -96,7 +98,7 @@ func (API *APITitan) CompanyDetail(cmd *cobra.Command, args []string) {
 			"  TVA rate: %d\n"+
 			"  Website: %s\n"+
 			"  Note: %s\n"+
-			"  Qutas:\n"+
+			"  Quotas:\n"+
 			"    CPUs: %d\n"+
 			"    Networks: %d\n"+
 			"    Servers: %d\n",
@@ -137,7 +139,7 @@ func (API *APITitan) GetCompanyServers(companyUUID string) ([]APIServer, error) 
 		return nil, err
 	}
 
-	servers := make([]APIServer, 0)
+	var servers []APIServer
 	if err := json.Unmarshal(API.RespBody, &servers); err != nil {
 		return nil, err
 	}

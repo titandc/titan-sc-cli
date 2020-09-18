@@ -18,8 +18,9 @@ import (
  */
 
 func (API *APITitan) NetworkList(cmd *cobra.Command, args []string) {
-	companyUUID, _ := cmd.Flags().GetString("company-uuid")
+	_ = args
 	API.ParseGlobalFlags(cmd)
+	companyUUID, _ := cmd.Flags().GetString("company-uuid")
 
 	err := API.SendAndResponse(HTTPGet, "/compute/networks?company_uuid="+companyUUID, nil)
 	if err != nil {
@@ -53,12 +54,48 @@ func (API *APITitan) NetworkList(cmd *cobra.Command, args []string) {
 	}
 }
 
+func (API *APITitan) NetworkDetail(cmd *cobra.Command, args []string) {
+	_ = args
+	API.ParseGlobalFlags(cmd)
+	networkUUID, _ := cmd.Flags().GetString("network-uuid")
+
+	err := API.SendAndResponse(HTTPGet, "/compute/networks/"+networkUUID, nil)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	if !API.HumanReadable {
+		API.PrintJson()
+	} else {
+		network := APINetwork{}
+		if err := json.Unmarshal(API.RespBody, &network); err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		API.NetworkPrintBase(&network)
+		fmt.Println("  Servers list:")
+		for _, server := range network.Servers {
+			fmt.Printf("    - Name: %s\n"+
+				"      OS: %s\n"+
+				"      Plan: %s\n"+
+				"      State: %s\n"+
+				"      UUID: %s\n",
+				server.Name, server.OS, server.Plan, server.State, server.UUID)
+		}
+		fmt.Printf("\n")
+	}
+}
+
 type APINetworkOps struct {
 	ServerUUID string `json:"server_uuid"`
 }
 
 func (API *APITitan) NetworkAttachServer(cmd *cobra.Command, args []string) {
-	networkUUID := args[0]
+	_ = args
+	API.ParseGlobalFlags(cmd)
+	networkUUID, _ := cmd.Flags().GetString("network-uuid")
 	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 
 	act := APINetworkOps{
@@ -68,7 +105,9 @@ func (API *APITitan) NetworkAttachServer(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) NetworkDetachServer(cmd *cobra.Command, args []string) {
-	networkUUID := args[0]
+	_ = args
+	API.ParseGlobalFlags(cmd)
+	networkUUID, _ := cmd.Flags().GetString("network-uuid")
 	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 
 	act := APINetworkOps{
@@ -78,8 +117,9 @@ func (API *APITitan) NetworkDetachServer(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) NetworkCreate(cmd *cobra.Command, args []string) {
-	companyUUID := args[0]
+	_ = args
 	API.ParseGlobalFlags(cmd)
+	companyUUID, _ := cmd.Flags().GetString("company-uuid")
 	networkName, _ := cmd.Flags().GetString("name")
 	cidr, _ := cmd.Flags().GetString("cidr")
 
@@ -117,8 +157,9 @@ func (API *APITitan) NetworkCreate(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) NetworkRemove(cmd *cobra.Command, args []string) {
-	_ = cmd
-	networkUUID := args[0]
+	_ = args
+	API.ParseGlobalFlags(cmd)
+	networkUUID, _ := cmd.Flags().GetString("network-uuid")
 	API.SendAndPrintDefaultReply(HTTPDelete, "/compute/networks/"+networkUUID, nil)
 }
 
@@ -178,7 +219,9 @@ type APINetworkRename struct {
 }
 
 func (API *APITitan) NetworkRename(cmd *cobra.Command, args []string) {
-	networkUUID := args[0]
+	_ = args
+	API.ParseGlobalFlags(cmd)
+	networkUUID, _ := cmd.Flags().GetString("network-uuid")
 	name, _ := cmd.Flags().GetString("name")
 
 	netRename := &APINetworkRename{Name: name}
@@ -186,10 +229,12 @@ func (API *APITitan) NetworkRename(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) NetworkSetGateway(cmd *cobra.Command, args []string) {
-	networkUUID := args[0]
+	_ = args
+	API.ParseGlobalFlags(cmd)
+	networkUUID, _ := cmd.Flags().GetString("network-uuid")
 	ip, _ := cmd.Flags().GetString("ip")
 
-	ipData := APIIP{
+	ipData := APIIPAttachDetach{
 		IP:      ip,
 		Version: 4,
 	}
@@ -197,7 +242,8 @@ func (API *APITitan) NetworkSetGateway(cmd *cobra.Command, args []string) {
 }
 
 func (API *APITitan) NetworkUnsetGateway(cmd *cobra.Command, args []string) {
-	_ = cmd
-	networkUUID := args[0]
+	_ = args
+	API.ParseGlobalFlags(cmd)
+	networkUUID, _ := cmd.Flags().GetString("network-uuid")
 	API.SendAndPrintDefaultReply(HTTPDelete, "/compute/networks/"+networkUUID+"/gateway", nil)
 }

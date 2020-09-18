@@ -20,15 +20,17 @@ var companyList = &cobra.Command{
 }
 
 var companyShow = &cobra.Command{
-	Use:     "show COMPANY_UUID",
+	Use:     "show --company-uuid COMPANY_UUID",
 	Aliases: []string{"get"},
 	Short:   "Show company detail.",
 	Long:    "Show detailed information about a company.",
-	Args:    cmdNeed1UUID,
 	Run:     API.CompanyDetail,
 }
 
 func companyCmdAdd() {
 	rootCmd.AddCommand(company)
 	company.AddCommand(companyList, companyShow)
+
+	companyShow.Flags().StringP("company-uuid", "c", "", "Set company UUID.")
+	_ = companyShow.MarkFlagRequired("company-uuid")
 }

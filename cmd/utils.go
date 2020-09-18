@@ -27,34 +27,40 @@ var weatherMap = &cobra.Command{
 }
 
 var addTokenCmd = &cobra.Command{
-	Use:   "setup \"token-string\"",
+	Use:   "setup --token \"token-string\"",
 	Short: "Automated config/install.",
 	Long:  "Automated config/install.",
-	Args:  cmdNeed1Args,
 	Run:   InitApp,
 }
 
 var managedServices = &cobra.Command{
-	Use:   "managed-services COMPANY_UUID",
+	Use:   "managed-services --company-uuid COMPANY_UUID",
 	Short: "Enable managed services.",
 	Long:  "Enable managed services.",
-	Args:  cmdNeed1UUID,
 	Run:   API.ManagedServices,
 }
 
 func utilsCmdAdd() {
 	rootCmd.AddCommand(weatherMap, addTokenCmd, managedServices)
+
+	addTokenCmd.Flags().StringP("token", "t", "", "Set user API token.")
+	_ = addTokenCmd.MarkFlagRequired("token")
+
+	managedServices.Flags().StringP("company-uuid", "s", "", "Set company UUID.")
+	_ = managedServices.MarkFlagRequired("company-uuid")
 }
 
 func InitApp(cmd *cobra.Command, args []string) {
-	_ = cmd
+	_ = args
+	API.ParseGlobalFlags(cmd)
+	token, _ := cmd.Flags().GetString("token")
 	var err error
 
 	if runtime.GOOS == "windows" {
 		path := ConfigFileName
-		err = InitCreateFile(path, args[0])
+		err = InitCreateFile(path, token)
 	} else {
-		err = InitAppUnixLike(args[0])
+		err = InitAppUnixLike(token)
 	}
 	if err != nil {
 		fmt.Println(err.Error())

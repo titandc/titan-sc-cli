@@ -20,11 +20,10 @@ var ip = &cobra.Command{
 }*/
 
 var ListCompanyAvailableIPs = &cobra.Command{
-	Use:     "company-list COMPANY_UUID",
+	Use:     "company-list --company-uuid COMPANY_UUID",
 	Aliases: []string{"cl"},
 	Short:   "List available IPs on a company.",
 	Long:    "List all available IPs (not attached to a server) on a company.",
-	Args:    cmdNeed1UUID,
 	Run:     API.IPsCompanyList,
 }
 
@@ -47,6 +46,9 @@ var IPAttach = &cobra.Command{
 func ipCmdAdd() {
 	rootCmd.AddCommand(ip)
 	ip.AddCommand(ListCompanyAvailableIPs, IPDetach, IPAttach)
+
+	ListCompanyAvailableIPs.Flags().StringP("company-uuid", "c", "", "Set company UUID.")
+	_ = ListCompanyAvailableIPs.MarkFlagRequired("company-uuid")
 
 	IPDetach.Flags().StringP("server-uuid", "s", "", "Set server UUID.")
 	IPDetach.Flags().StringP("ip", "i", "", "Set IP to detach.")
