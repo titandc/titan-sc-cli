@@ -42,7 +42,7 @@ You must first generate an API token from the [Titan SC dashboard](https://sc.ti
 Run the following command to automatically setup your environment (replace `your token` by the API key previously generated):
 
 ```shell script
-./titan-sc setup "your token"
+./titan-sc setup --token "your token"
 ```
 
 This will automatically create the configuration file filled with your API key. If using Linux/Mac this will also copy the binary on your system (see details below).

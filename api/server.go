@@ -97,40 +97,6 @@ func (API *APITitan) ServerList(cmd *cobra.Command, args []string) {
 	}
 }
 
-/* For print server list company by company
-		companyPrinted := []string{}
-		var w *tabwriter.Writer
-		w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		_, _ = fmt.Fprintf(w, "COMPANY\tUUID\tPLAN\tSTATE\tOS\tNAME\tMANAGED\t\n")
-		for _, server := range servers {
-			companyName := server.CompanyName
-			companyNamePrint := companyName
-			if !API.ServerListByCompanyAlreadyPrinted(server.CompanyName, companyPrinted) {
-				for _, reserver := range servers {
-					if reserver.CompanyName == companyName {
-						state := API.ServerStateSetColor(server.State)
-						_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%t\t\n",
-							companyNamePrint, reserver.UUID, reserver.Plan, state, reserver.Template,
-							reserver.Name, reserver.Managed)
-						companyNamePrint = ""
-					}
-				}
-				companyPrinted = append(companyPrinted, companyName)
-			}
-		}
-		_ = w.Flush()
-	}
-}
-func (API *APITitan) ServerListByCompanyAlreadyPrinted(companyName string, printed []string) bool {
-	for _, company := range printed {
-		if company == companyName {
-			return true
-		}
-	}
-	return false
-}
-*/
-
 func (API *APITitan) ServerDetail(cmd *cobra.Command, args []string) {
 	_ = args
 	API.ParseGlobalFlags(cmd)

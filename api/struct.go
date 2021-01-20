@@ -26,14 +26,18 @@ type APISize struct {
 }
 
 type APIServer struct {
-	UUID         string `json:"uuid"`
-	Login        string `json:"user_login"`
-	OS           string `json:"os"`
-	Name         string `json:"Name"`
-	Plan         string `json:"Plan"`
-	State        string `json:"State"`
-	Template     string `json:"template"`
-	Hypervisor   string `json:"hypervisor"`
+	UUID       string `json:"uuid"`
+	Login      string `json:"user_login"`
+	OS         string `json:"os"`
+	Name       string `json:"Name"`
+	Plan       string `json:"Plan"`
+	State      string `json:"State"`
+	Template   string `json:"template"`
+	Hypervisor struct {
+		UUID     string `json:"uuid"`
+		Hostname string `json:"hostname"`
+		State    string `json:"state"`
+	} `json:"hypervisor"`
 	Reverse      string `json:"reverse"`
 	Gateway      string `json:"gateway"`
 	Mac          string `json:"mac"`
