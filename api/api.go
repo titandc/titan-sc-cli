@@ -358,7 +358,6 @@ func (API *APITitan) SendAndPrintDefaultReply(httpMethod, path string, httpData 
 			return
 		}
 	}
-
 	err = API.SendAndResponse(httpMethod, path, reqData)
 	if err != nil {
 		fmt.Println(err.Error())

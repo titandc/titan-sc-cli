@@ -299,21 +299,26 @@ func (API *APITitan) ServerCreate(cmd *cobra.Command, args []string) {
 	_ = args
 	API.ParseGlobalFlags(cmd)
 
-	server := &APICreateServers{}
+	server := &APICreateServers{
+		CreateServersDetail: make([]CreateServersDetail, 1),
+	}
+
 	sshKeys, _ := cmd.Flags().GetString("ssh-keys-name")
-	server.Quantity, _ = cmd.Flags().GetInt64("quantity")
-	server.UserPassword, _ = cmd.Flags().GetString("password")
-	server.UserLogin, _ = cmd.Flags().GetString("login")
-	server.TemplateOS, _ = cmd.Flags().GetString("os")
-	server.TemplateVersion, _ = cmd.Flags().GetString("os-version")
-	server.ManagedNetwork, _ = cmd.Flags().GetString("network-uuid")
-	server.Plan, _ = cmd.Flags().GetString("plan")
+	server.CreateServersDetail[0].Quantity, _ = cmd.Flags().GetInt64("quantity")
+	server.CreateServersDetail[0].UserPassword, _ = cmd.Flags().GetString("password")
+	server.CreateServersDetail[0].UserLogin, _ = cmd.Flags().GetString("login")
+	server.CreateServersDetail[0].TemplateOS, _ = cmd.Flags().GetString("os")
+	server.CreateServersDetail[0].TemplateVersion, _ = cmd.Flags().GetString("os-version")
+	server.CreateServersDetail[0].ManagedNetwork, _ = cmd.Flags().GetString("network-uuid")
+	server.CreateServersDetail[0].Plan, _ = cmd.Flags().GetString("plan")
 	CpuAddonsNumber, _ := cmd.Flags().GetInt("cpu-addon")
 	RamAddonsNumber, _ := cmd.Flags().GetInt("ram-addon")
 	DiskAddonsNumber, _ := cmd.Flags().GetInt("disk-addon")
 
-	server.Plan = strings.ToUpper(server.Plan)
-	switch server.Plan {
+	server.CreateServersDetail[0].Plan = strings.ToUpper(server.CreateServersDetail[0].Plan)
+	server.CreateServersDetail[0].TemplateOS = strings.ToTitle(server.CreateServersDetail[0].TemplateOS)
+	
+	switch server.CreateServersDetail[0].Plan {
 	case "SC1":
 		if err := API.ServerCheckAddonsNumber(CpuAddonsNumber, RamAddonsNumber, DiskAddonsNumber,
 			SC1MaxCpuAddons, SC1MaxRamAddons, SC1MaxDiskAddons, "SC1"); err != nil {
@@ -364,20 +369,18 @@ func (API *APITitan) ServerCreate(cmd *cobra.Command, args []string) {
 			}
 		}
 	}
-	server.Addons = allAddons
+	server.CreateServersDetail[0].Addons = allAddons
 
 	if sshKeys != "" {
 		var err error
-		server.UserSSHKey, err = API.ServerSearchAndConcatSSHKeys(sshKeys)
+		server.CreateServersDetail[0].UserSSHKeys, err = API.ServerSearchSSHKeys(sshKeys)
 		if err != nil {
 			log.Println(err.Error())
 			return
 		}
 	}
 
-	var servers []*APICreateServers
-	servers = append(servers, server)
-	API.SendAndPrintDefaultReply(HTTPPost, "/compute/servers", servers)
+	API.SendAndPrintDefaultReply(HTTPPost, "/compute/servers", server)
 }
 
 func (API *APITitan) ServerCreateAddAddonInArray(addonsList []APIAddonsItem,
@@ -472,7 +475,7 @@ func (API *APITitan) ServerReset(cmd *cobra.Command, args []string) {
 
 	if sshKeys != "" {
 		var err error
-		serverReset.UserSSHKey, err = API.ServerSearchAndConcatSSHKeys(sshKeys)
+		serverReset.UserSSHKeys, err = API.ServerSearchSSHKeys(sshKeys)
 		if err != nil {
 			log.Println(err.Error())
 			return
@@ -481,27 +484,24 @@ func (API *APITitan) ServerReset(cmd *cobra.Command, args []string) {
 	API.SendAndPrintDefaultReply(HTTPPut, "/compute/servers/"+serverUUID+"/reset", serverReset)
 }
 
-func (API *APITitan) ServerSearchAndConcatSSHKeys(sshKeys string) (string, error) {
+func (API *APITitan) ServerSearchSSHKeys(sshKeysName string) ([]string, error) {
 	sshKeysList, err := API.SSHKeysGet()
 	if err != nil {
-		return "", err
+		return []string{}, err
 	}
-
-	sshKeysContent := ""
-	for _, keyRequest := range strings.Split(sshKeys, ",") {
-		find := false
+	sshKeys := make([]string, 0)
+	for _, keyRequest := range strings.Split(strings.TrimSpace(sshKeysName), ",") {
+		found := false
 		for _, keyExist := range sshKeysList {
 			if keyExist.Title == keyRequest {
-				sshKeysContent += keyExist.Content + "\n"
-				find = true
+				sshKeys = append(sshKeys, keyExist.Content)
+				found = true
 				break
 			}
 		}
-
-		// Check if ssh key find
-		if !find {
-			return "", fmt.Errorf("SSH keys name <%s> not found.\n", keyRequest)
+		if !found {
+			return []string{}, fmt.Errorf("SSH keys name <%s> not found.\n", keyRequest)
 		}
 	}
-	return sshKeysContent, nil
+	return sshKeys, nil
 }

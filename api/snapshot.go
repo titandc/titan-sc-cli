@@ -30,7 +30,7 @@ func (API *APITitan) SnapshotList(cmd *cobra.Command, args []string) {
 	}
 
 	if len(snapshots) == 0 {
-		fmt.Println("0 Snapshot")
+		fmt.Println("Snapshot list is empty.")
 		return
 	}
 

@@ -110,7 +110,7 @@ var serverGetTemplateList = &cobra.Command{
 }
 
 var serverCreate = &cobra.Command{
-	Use:   "create --server-uuid SERVER_UUID --os OS_NAME --os-version OS_VERSION --plan SC1/SC2/SC3",
+	Use:   "create --os OS_NAME --os-version OS_VERSION --plan SC1/SC2/SC3",
 	Short: "Send a request for create new server's.",
 	Long:  "Send a request for create new server's.\nGet os and os version see: server templates.",
 	Run:   API.ServerCreate,

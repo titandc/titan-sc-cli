@@ -349,16 +349,21 @@ type APIDeleteUserSSHKey struct {
 	Name string `json:"name"`
 }
 
-type APICreateServers struct {
+type CreateServersDetail struct {
+	Username        string                  `json:"username"`
 	Quantity        int64                   `json:"quantity"`
 	UserPassword    string                  `json:"user_password,omitempty"`
 	UserLogin       string                  `json:"user_login,omitempty"`
-	UserSSHKey      string                  `json:"user_ssh_key,omitempty"`
+	UserSSHKeys     []string                `json:"user_ssh_keys,omitempty"`
 	TemplateOS      string                  `json:"template_os"`
 	TemplateVersion string                  `json:"template_version"`
 	Plan            string                  `json:"plan"`
 	Addons          []APIInstallAddonsAddon `json:"addons,omitempty"`
 	ManagedNetwork  string                  `json:"managed_network,omitempty"`
+}
+
+type APICreateServers struct {
+	CreateServersDetail []CreateServersDetail `json:"servers"`
 }
 
 type APIInstallAddonsAddon struct {
@@ -398,10 +403,10 @@ type APITemplateFullInfosVersion struct {
 }
 
 type APIResetServer struct {
-	UserPassword    string `json:"user_password,omitempty"`
-	UserSSHKey      string `json:"user_ssh_key,omitempty"`
-	TemplateOS      string `json:"template_os"`
-	TemplateVersion string `json:"template_version"`
+	UserPassword    string   `json:"user_password,omitempty"`
+	UserSSHKeys     []string `json:"user_ssh_keys,omitempty"`
+	TemplateOS      string   `json:"template_os"`
+	TemplateVersion string   `json:"template_version"`
 }
 
 type IsAdminStruct struct {
