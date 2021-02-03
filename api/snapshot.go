@@ -34,12 +34,12 @@ func (API *APITitan) SnapshotList(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	for _, snap := range snapshots {
-		if !API.HumanReadable {
-			API.PrintJson()
-		} else {
-			w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-			_, _ = fmt.Fprintf(w, "SNAPSHOT UUID\tTIMESTAMP\tSIZE\tNAME\t\n")
+	if !API.HumanReadable {
+		API.PrintJson()
+	} else {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+		_, _ = fmt.Fprintf(w, "SNAPSHOT UUID\tTIMESTAMP\tSIZE\tNAME\t\n")
+		for _, snap := range snapshots {
 			API.PrintSnapshotInfos(w, &snap)
 		}
 	}
