@@ -23,20 +23,29 @@ func (API *APITitan) SnapshotList(cmd *cobra.Command, args []string) {
 	API.ParseGlobalFlags(cmd)
 	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 
-	snapshots, err := API.SnapshotServerUUIDList(serverUUID)
+	err := API.SendAndResponse(HTTPGet, "/compute/servers/"+serverUUID+"/snapshots", nil)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	if len(snapshots) == 0 {
-		fmt.Println("Snapshot list is empty.")
+	var snapshots []APISnapshot
+	if err := json.Unmarshal(API.RespBody, &snapshots); err != nil {
+		if !API.HumanReadable {
+			API.PrintJson()
+		} else {
+			fmt.Println(err.Error())
+		}
 		return
 	}
 
 	if !API.HumanReadable {
 		API.PrintJson()
 	} else {
+		if len(snapshots) == 0 {
+			fmt.Println("Snapshot list is empty.")
+			return
+		}
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 		_, _ = fmt.Fprintf(w, "SNAPSHOT UUID\tTIMESTAMP\tSIZE\tNAME\t\n")
 		for _, snap := range snapshots {
@@ -76,41 +85,21 @@ func (API *APITitan) SnapshotDelete(cmd *cobra.Command, args []string) {
 	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 	snapUUID, _ := cmd.Flags().GetString("snapshot-uuid")
 
-	snapshots, err := API.SnapshotServerUUIDList(serverUUID)
+	err := API.SendAndResponse(HTTPDelete, "/compute/servers/"+
+		serverUUID+"/snapshots/"+snapUUID, nil)
 	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	for _, snap := range snapshots {
-		if snapUUID != snap.UUID {
-			continue
-		}
-
-		err = API.SendAndResponse(HTTPDelete, "/compute/servers/"+
-			serverUUID+"/snapshots/"+snapUUID, nil)
-		if err != nil {
+		if !API.HumanReadable {
+			API.PrintJson()
+		} else {
 			fmt.Println(err.Error())
 		}
-
-		fmt.Println("Snapshot deleting request successfully sent.")
 		return
 	}
-	fmt.Println("Snapshot UUID", snapUUID, "not found")
-}
-
-func (API *APITitan) SnapshotServerUUIDList(serverUUID string) ([]APISnapshot, error) {
-
-	err := API.SendAndResponse(HTTPGet, "/compute/servers/"+serverUUID+"/snapshots", nil)
-	if err != nil {
-		return nil, err
+	if !API.HumanReadable {
+		API.PrintJson()
+	} else {
+		fmt.Println("Snapshot deleting request successfully sent.")
 	}
-
-	var snap []APISnapshot
-	if err := json.Unmarshal(API.RespBody, &snap); err != nil {
-		return nil, err
-	}
-	return snap, nil
 }
 
 func (API *APITitan) PrintSnapshotInfos(w *tabwriter.Writer, snap *APISnapshot) {
