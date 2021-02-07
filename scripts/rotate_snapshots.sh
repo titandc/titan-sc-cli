@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 SERVER_UUID="$1"
 
@@ -12,7 +11,7 @@ function create_new_snapshot {
         while [ $(titan-sc snap ls -u ${SERVER_UUID} | \
             jq -r '.[]|select(.state=="creating")|.uuid' | wc -l) -gt 0 ]; do
             echo -n "."
-            sleep 1
+            sleep 2
         done
         echo -e "\nNew snapshot created."
         return 0
@@ -20,7 +19,7 @@ function create_new_snapshot {
         echo -e "\nSnapshot limit reached for server ${SERVER_UUID}."
         return 1
     else
-        echo -e "\nUnable to create new snapshot: ${SNAP_CREATION}"
+        echo -e "\nUnable to create new snapshot: ${SNAP_CREATION}."
         exit -1
     fi
 }
@@ -44,7 +43,7 @@ function delete_oldest_snapshot {
     while [ $(titan-sc snap ls -u ${SERVER_UUID} | \
         jq -r '.[]|select(.state=="deleting")|.uuid' | wc -l) -gt 0 ]; do
         echo -n "."
-        sleep 1
+        sleep 2
     done
     echo -e "\nSnapshot deleted."
 }
