@@ -74,6 +74,7 @@ type APIServer struct {
 	PendingActions []string `json:"pending_actions"`
 	ManagedNetwork string   `json:"managed_network"`
 	Managed        bool     `json:"managed"`
+	Notifications  []string `json:"notifications"`
 }
 
 type APIServerUpdateInfos struct {

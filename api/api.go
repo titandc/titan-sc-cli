@@ -321,7 +321,11 @@ func (API *APITitan) SendAndResponse(method, path string, req []byte) error {
 	request.Header.Add("Titan-Cli-Version", API.CLIVersion)
 	request.Header.Set("Content-Type", "application/json; charset=utf-8")
 
-	client := &http.Client{}
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 	resp, err := client.Do(request)
 	if err != nil {
 		return err
@@ -358,6 +362,9 @@ func (API *APITitan) SendAndPrintDefaultReply(httpMethod, path string, httpData 
 			return
 		}
 	}
+
+	println(string(reqData))
+
 	err = API.SendAndResponse(httpMethod, path, reqData)
 	if err != nil {
 		fmt.Println(err.Error())

@@ -1,6 +1,36 @@
 
 # ChangeLog
 
+## 2.1.5
+
+- Add servers notifications output
+
+## 2.1.4
+
+- Add script example to rotate snapshots.
+- Ensure JSON as default output for snapshot related commands.
+
+## 2.1.3
+
+- Fix create servers on premium accounts
+- Update commands usage
+
+## 2.1.2
+
+- Fix snapshot listing with multi arrays.
+
+## 2.1.1
+
+- Add new fields on server's hypervisor description.
+- Add missing option to setup documentation.
+
+## 2.1.0
+
+- Add command-line completion
+- Use a flag for all options
+- Add/del/list PNAT rules
+- Updated documentation (completion section)
+
 ## 2.0.1
 
 - Fix servers textual rendering.

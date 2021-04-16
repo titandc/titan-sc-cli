@@ -254,6 +254,15 @@ func (API *APITitan) PrintServerDetail(server *APIServer) {
 	} else {
 		fmt.Println("Notes:", server.Notes)
 	}
+
+	if server.Notifications == nil || len(server.Notifications) < 1 {
+		fmt.Println("Notifications: -")
+	} else {
+		fmt.Println("Notifications:")
+		for _, notification := range server.Notifications {
+			fmt.Printf("  - %s\n", notification)
+		}
+	}
 }
 
 func (API *APITitan) ServerStateSetColor(state string) string {
@@ -317,7 +326,7 @@ func (API *APITitan) ServerCreate(cmd *cobra.Command, args []string) {
 
 	server.CreateServersDetail[0].Plan = strings.ToUpper(server.CreateServersDetail[0].Plan)
 	server.CreateServersDetail[0].TemplateOS = strings.ToTitle(server.CreateServersDetail[0].TemplateOS)
-	
+
 	switch server.CreateServersDetail[0].Plan {
 	case "SC1":
 		if err := API.ServerCheckAddonsNumber(CpuAddonsNumber, RamAddonsNumber, DiskAddonsNumber,
