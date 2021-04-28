@@ -4,39 +4,39 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
-	. "titan-sc/api"
 )
 
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Show API or CLI version.",
-	Long:  "Show API or CLI version.",
-}
+func (cmd *CMD) VersionCmdAdd() {
 
-var versionCliCmd = &cobra.Command{
-	Use:   "cli",
-	Short: "Show CLI version.",
-	Long:  "Show CLI version.",
-	Run:   versionCli,
-}
+	versionCmd := &cobra.Command{
+		Use:   "version",
+		Short: "Show API or CLI version.",
+		Long:  "Show API or CLI version.",
+	}
 
-var versionAPICmd = &cobra.Command{
-	Use:   "api",
-	Short: "Show API version.",
-	Long:  "Show API version.",
-	Run:   API.VersionAPI,
-}
+	versionCliCmd := &cobra.Command{
+		Use:   "cli",
+		Short: "Show CLI version.",
+		Long:  "Show CLI version.",
+		Run:   cmd.versionCli,
+	}
 
-func versionCmdAdd() {
-	rootCmd.AddCommand(versionCmd)
+	versionAPICmd := &cobra.Command{
+		Use:   "api",
+		Short: "Show API version.",
+		Long:  "Show API version.",
+		Run:   cmd.runMiddleware.VersionAPI,
+	}
+
+	cmd.RootCommand.AddCommand(versionCmd)
 	versionCmd.AddCommand(versionAPICmd, versionCliCmd)
 }
 
-func versionCli(cmd *cobra.Command, args []string) {
+func (cmd *CMD) versionCli(cobraCommand *cobra.Command, args []string) {
 	_ = cmd
 	_ = args
 
 	fmt.Printf("Titan cloud CLI version %d.%d.%d\n",
-		VersionMajor, VersionMinor, VersionPatch)
+		cmd.VersionMajor, cmd.VersionMinor, cmd.VersionPatch)
 	os.Exit(0)
 }

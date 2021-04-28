@@ -2,11 +2,7 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/spf13/cobra"
-	"log"
-	"os"
-	"text/tabwriter"
+	"errors"
 )
 
 /*
@@ -18,94 +14,70 @@ import (
  *
  *
  */
-func (API *APITitan) SnapshotList(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 
-	err := API.SendAndResponse(HTTPGet, "/compute/servers/"+serverUUID+"/snapshots", nil)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
+const (
+	SnapshotCreateErrorTooFast       = "SNAPSHOT_CREATE_FAIL_TOO_FAST"
+	SnapshotCreateErrorLimitExceeded = "SNAPSHOT_CREATE_FAIL_LIMIT_EXCEEDED"
+)
 
-	var snapshots []APISnapshot
-	if err := json.Unmarshal(API.RespBody, &snapshots); err != nil {
-		if !API.HumanReadable {
-			API.PrintJson()
-		} else {
-			fmt.Println(err.Error())
-		}
-		return
-	}
-
-	if !API.HumanReadable {
-		API.PrintJson()
-	} else {
-		if len(snapshots) == 0 {
-			fmt.Println("Snapshot list is empty.")
-			return
-		}
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		_, _ = fmt.Fprintf(w, "SNAPSHOT UUID\tTIMESTAMP\tSIZE\tNAME\t\n")
-		for _, snap := range snapshots {
-			API.PrintSnapshotInfos(w, &snap)
-		}
-	}
-}
-
-func (API *APITitan) SnapshotCreate(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-	serverUUID, _ := cmd.Flags().GetString("server-uuid")
-
-	err := API.SendAndResponse(HTTPPost, "/compute/servers/"+serverUUID+"/snapshots", nil)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	if !API.HumanReadable {
-		API.PrintJson()
-	} else {
-		snap := &APISnapshot{}
-		if err := json.Unmarshal(API.RespBody, &snap); err != nil {
-			log.Println("Human readable format error: ", err.Error())
-			return
-		}
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		_, _ = fmt.Fprintf(w, "SNAPSHOT UUID\tTIMESTAMP\tSIZE\t\tNAME\t\n")
-		API.PrintSnapshotInfos(w, snap)
-	}
-}
-
-func (API *APITitan) SnapshotDelete(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-	serverUUID, _ := cmd.Flags().GetString("server-uuid")
-	snapUUID, _ := cmd.Flags().GetString("snapshot-uuid")
-
-	err := API.SendAndResponse(HTTPDelete, "/compute/servers/"+
+func (API *API) DeleteSnapshot(serverUUID, snapUUID string) (*APIReturn, error) {
+	// Send request
+	rawData, apiReturn, err := API.SendRequestToAPI(HTTPDelete, "/compute/servers/"+
 		serverUUID+"/snapshots/"+snapUUID, nil)
+
+	// Communication error
 	if err != nil {
-		if !API.HumanReadable {
-			API.PrintJson()
-		} else {
-			fmt.Println(err.Error())
-		}
-		return
+		return nil, err
 	}
-	if !API.HumanReadable {
-		API.PrintJson()
-	} else {
-		fmt.Println("Snapshot deleting request successfully sent.")
+
+	// Unmarshal error
+	if apiReturn == nil {
+		return nil, errors.New(string(rawData))
 	}
+	return apiReturn, nil
 }
 
-func (API *APITitan) PrintSnapshotInfos(w *tabwriter.Writer, snap *APISnapshot) {
+func (API *API) ListSnapshots(serverUUID string) ([]APISnapshot, *APIReturn, error) {
+	// Send request
+	rawData, apiReturn, err := API.SendRequestToAPI(HTTPGet, "/compute/servers/"+serverUUID+"/snapshots", nil)
 
-	_, _ = fmt.Fprintf(w, "%s\t%s\t%d %s\t%s\t\n",
-		snap.UUID, snap.CreatedAt, snap.Size.Value,
-		snap.Size.Unit, snap.Name)
-	_ = w.Flush()
+	// Communication error
+	if err != nil {
+		return []APISnapshot{}, nil, err
+	}
+
+	// API error
+	if apiReturn != nil {
+		return []APISnapshot{}, apiReturn, nil
+	}
+
+	// Try to unmarshal output
+	var snapshots []APISnapshot
+	err = json.Unmarshal(rawData, &snapshots)
+	if err != nil {
+		return []APISnapshot{}, nil, err
+	}
+	return snapshots, nil, nil
+}
+
+func (API *API) PostCreateSnapshot(serverUUID string) (*APISnapshot, *APIReturn, error) {
+	rawData, apiReturn, err := API.SendRequestToAPI(HTTPPost, "/compute/servers/"+serverUUID+"/snapshots", nil)
+
+	// Communication error
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// API error
+	if apiReturn != nil {
+		return nil, apiReturn, nil
+	}
+
+	// Try to unmarshal output
+	var snapshot APISnapshot
+	err = json.Unmarshal(rawData, &snapshot)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &snapshot, nil, nil
 }

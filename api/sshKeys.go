@@ -1,84 +1,33 @@
 package api
 
-import (
-	"encoding/json"
-	"fmt"
-	"github.com/spf13/cobra"
-)
+import "encoding/json"
 
-func (API *APITitan) SSHKeysList(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-
-	if err := API.SendAndResponse(HTTPGet, "/auth/user/sshkeys", nil); err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	if !API.HumanReadable {
-		API.PrintJson()
-	} else {
-		sshKeys := make([]APIUserSSHKey, 0)
-		if err := json.Unmarshal(API.RespBody, &sshKeys); err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		sshkeySize := len(sshKeys)
-		if len(sshKeys) == 0 {
-			fmt.Println("SSH keys list is empty")
-		} else {
-			API.SSHKeysPrint(sshKeys, sshkeySize, "")
-		}
-	}
-}
-
-func (API *APITitan) SSHKeysGet() ([]APIUserSSHKey, error) {
-	if err := API.SendAndResponse(HTTPGet, "/auth/user/sshkeys", nil); err != nil {
+func (API *API) GetSSHKeyList() ([]APIUserSSHKey, error) {
+	apiResponseBody, apiReturn, err := API.SendRequestToAPI(HTTPGet, "/auth/user/sshkeys", nil)
+	if err = handlePotentialDoubleError(apiReturn, err); err != nil {
 		return nil, err
 	}
-
-	var sshKeys []APIUserSSHKey
-	if err := json.Unmarshal(API.RespBody, &sshKeys); err != nil {
-		fmt.Println(err.Error())
+	sshKeyList := make([]APIUserSSHKey, 0)
+	if err = json.Unmarshal(apiResponseBody, &sshKeyList); err != nil {
 		return nil, err
 	}
-	return sshKeys, nil
+	return sshKeyList, nil
 }
 
-func (API *APITitan) SSHKeysPrint(sshKeys []APIUserSSHKey, sshkeySize int, ident string) {
-	sshkeySize--
-	fmt.Printf("%sSSH keys infos:\n", ident)
-	for i, key := range sshKeys {
-		fmt.Printf("%s  Title: %s\n"+
-			"%s  Content: %s\n",
-			ident, key.Title, ident, key.Content)
-		if i != sshkeySize {
-			fmt.Printf("\n")
-		}
-	}
-}
-
-func (API *APITitan) SSHKeyAdd(cmd *cobra.Command, args []string) {
-	_ = args
-	name, _ := cmd.Flags().GetString("name")
-	value, _ := cmd.Flags().GetString("value")
-	API.ParseGlobalFlags(cmd)
+func (API *API) PostSSHKeyAdd(name, value string) (*APIReturn, error) {
 
 	addSSHKey := APIAddUserSSHKey{
 		Value: value,
 		Name:  name,
 	}
-	API.SendAndPrintDefaultReply(HTTPPost, "/auth/user/sshkeys", addSSHKey)
+	_, apiReturn, err := API.SendRequestToAPI(HTTPPost, "/auth/user/sshkeys", addSSHKey)
+	return apiReturn, err
 }
 
-func (API *APITitan) SSHKeyDel(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-	name, _ := cmd.Flags().GetString("name")
-
+func (API *API) DeleteSSHKey(name string) (*APIReturn, error) {
 	delSSHKey := APIDeleteUserSSHKey{
 		Name: name,
 	}
-	API.SendAndPrintDefaultReply(HTTPDelete, "/auth/user/sshkeys", delSSHKey)
+	_, apiReturn, err := API.SendRequestToAPI(HTTPDelete, "/auth/user/sshkeys", delSSHKey)
+	return apiReturn, err
 }

@@ -2,23 +2,23 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	. "titan-sc/api"
 )
 
-var apiUser = &cobra.Command{
-	Use:   "user",
-	Short: "Manage your user information.",
-	Long:  "Manage your user informations.",
-}
+func (cmd *CMD) UserCmdAdd() {
 
-var userAllInfos = &cobra.Command{
-	Use:   "infos",
-	Short: "Get all user informations.",
-	Long:  "Get all user informations.",
-	Run:   API.UserShowAllInfos,
-}
+	apiUser := &cobra.Command{
+		Use:   "user",
+		Short: "Manage your user information.",
+		Long:  "Manage your user informations.",
+	}
 
-func userCmdAdd() {
-	rootCmd.AddCommand(apiUser)
+	userAllInfos := &cobra.Command{
+		Use:   "infos",
+		Short: "Get all user informations.",
+		Long:  "Get all user informations.",
+		Run:   cmd.runMiddleware.UserShowAllInfos,
+	}
+
+	cmd.RootCommand.AddCommand(apiUser)
 	apiUser.AddCommand(userAllInfos)
 }

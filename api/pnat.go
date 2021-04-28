@@ -1,23 +1,8 @@
 package api
 
-import (
-	"encoding/json"
-	"fmt"
-	"github.com/spf13/cobra"
-	"os"
-	"text/tabwriter"
-)
+import "encoding/json"
 
-func (API *APITitan) IPPNATRuleAdd(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-	serverUUID, _ := cmd.Flags().GetString("server-uuid")
-	ip, _ := cmd.Flags().GetString("ip")
-	transparent, _ := cmd.Flags().GetBool("transparent")
-	protocol, _ := cmd.Flags().GetString("protocol")
-	portSrc, _ := cmd.Flags().GetInt64("port-src")
-	portDst, _ := cmd.Flags().GetInt64("port-dst")
-
+func (API *API) PostIPPNATRuleAdd(serverUUID, ip, protocol string, transparent bool, portSrc, portDst int64) (*APIReturn, error) {
 	pnatOpt := APIPNATRuleAddDel{
 		IP:          ip,
 		Transparent: transparent,
@@ -25,19 +10,11 @@ func (API *APITitan) IPPNATRuleAdd(cmd *cobra.Command, args []string) {
 		PortSrc:     portSrc,
 		PortDst:     portDst,
 	}
-	API.SendAndPrintDefaultReply(HTTPPost, "/compute/servers/"+serverUUID+"/pnat", pnatOpt)
+	_, apiReturn, err := API.SendRequestToAPI(HTTPPost, "/compute/servers/"+serverUUID+"/pnat", pnatOpt)
+	return apiReturn, err
 }
 
-func (API *APITitan) IPPNATRuleDel(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-	serverUUID, _ := cmd.Flags().GetString("server-uuid")
-	ip, _ := cmd.Flags().GetString("ip")
-	transparent, _ := cmd.Flags().GetBool("transparent")
-	protocol, _ := cmd.Flags().GetString("protocol")
-	portSrc, _ := cmd.Flags().GetInt64("port-src")
-	portDst, _ := cmd.Flags().GetInt64("port-dst")
-
+func (API *API) DeleteIPPNATRule(serverUUID, ip, protocol string, transparent bool, portSrc, portDst int64) (*APIReturn, error) {
 	pnatOpt := APIPNATRuleAddDel{
 		IP:          ip,
 		Transparent: transparent,
@@ -45,50 +22,18 @@ func (API *APITitan) IPPNATRuleDel(cmd *cobra.Command, args []string) {
 		PortSrc:     portSrc,
 		PortDst:     portDst,
 	}
-	API.SendAndPrintDefaultReply(HTTPDelete, "/compute/servers/"+serverUUID+"/pnat", pnatOpt)
+	_, apiReturn, err := API.SendRequestToAPI(HTTPDelete, "/compute/servers/"+serverUUID+"/pnat", pnatOpt)
+	return apiReturn, err
 }
 
-func (API *APITitan) ListServerPNATRules(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-	serverUUID, _ := cmd.Flags().GetString("server-uuid")
-
-	err := API.SendAndResponse(HTTPGet, "/compute/servers/"+serverUUID+"/pnat", nil)
-	if err != nil {
-		fmt.Println(err.Error())
+func (API *API) GetServerPNATRulesList(serverUUID string) ([]APIPNATRuleInfos, error) {
+	apiResponseBody, apiReturn, err := API.SendRequestToAPI(HTTPGet, "/compute/servers/"+serverUUID+"/pnat", nil)
+	if err = handlePotentialDoubleError(apiReturn, err); err != nil {
+		return nil, err
 	}
-	if !API.HumanReadable {
-		API.PrintJson()
-	} else {
-		APIPNATRules := make([]APIPNATRuleInfos, 0)
-		if err := json.Unmarshal(API.RespBody, &APIPNATRules); err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		API.PNATRulesPrint(&APIPNATRules)
+	PNATRulesList := make([]APIPNATRuleInfos, 0)
+	if err = json.Unmarshal(apiResponseBody, PNATRulesList); err != nil {
+		return nil, err
 	}
-}
-
-func (API *APITitan) PNATRulesPrint(pnatRulesArray *[]APIPNATRuleInfos) {
-	if len(*pnatRulesArray) == 0 {
-		fmt.Println("Empty PNAT rules list")
-		return
-	}
-
-	var w *tabwriter.Writer
-	w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-
-	_, _ = fmt.Fprintf(w, "IP\tTRANSPARENT\tPROTOCOL\tPORT_SRC\tPORT_DST\t\n")
-	for _, pnatRule := range *pnatRulesArray {
-		if pnatRule.Transparent {
-			_, _ = fmt.Fprintf(w, "%s\t%t\t%s\t%s\t%s\t\n",
-				pnatRule.IP, pnatRule.Transparent, "-", "-", "-")
-
-		} else {
-			_, _ = fmt.Fprintf(w, "%s\t%t\t%s\t%d\t%d\t\n",
-				pnatRule.IP, pnatRule.Transparent, pnatRule.Protocol, pnatRule.PortSrc, pnatRule.PortDst)
-
-		}
-	}
-	_ = w.Flush()
+	return PNATRulesList, nil
 }

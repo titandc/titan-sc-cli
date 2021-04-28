@@ -2,42 +2,42 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	. "titan-sc/api"
 )
 
-var pnat = &cobra.Command{
-	Use:   "port-nat",
-	Aliases: []string{"pnat", "pat"},
-	Short: "Manage PNAT rules.",
-	Long:  "Manage port address translation (PNAT) rules.",
-}
+func (cmd *CMD) PnatCmdAdd() {
 
-var ListServerPNATRules = &cobra.Command{
-	Use:     "list --server-uuid SERVER_UUID",
-	Aliases: []string{"lp"},
-	Short:   "List all PNAT rules of a server.",
-	Long:    "List all PNAT rules of a server.",
-	Run:     API.ListServerPNATRules,
-}
+	pnat := &cobra.Command{
+		Use:     "port-nat",
+		Aliases: []string{"pnat", "pat"},
+		Short:   "Manage PNAT rules.",
+		Long:    "Manage port address translation (PNAT) rules.",
+	}
 
-var AddIPPNATRule = &cobra.Command{
-	Use:     "add --ip IP_ADDRESS --server-uuid SERVER_UUID [--transparent | --protocol --port-src --port-dst]",
-	Aliases: []string{"new"},
-	Short:   "Add a PNAT rule.",
-	Long:    "Add a PNAT rule from a public IP to a managed server.",
-	Run:     API.IPPNATRuleAdd,
-}
+	ListServerPNATRules := &cobra.Command{
+		Use:     "list --server-uuid SERVER_UUID",
+		Aliases: []string{"lp"},
+		Short:   "List all PNAT rules of a server.",
+		Long:    "List all PNAT rules of a server.",
+		Run:     cmd.runMiddleware.ListServerPNATRules,
+	}
 
-var DelIPPNATRule = &cobra.Command{
-	Use:     "del --ip IP_ADDRESS --server-uuid SERVER_UUID [--transparent | --protocol --port-src --port-dst]",
-	Aliases: []string{"rm"},
-	Short:   "Delete a PNAT rule.",
-	Long:    "Delete a PNAT rule between a public IP and a managed server.",
-	Run:     API.IPPNATRuleDel,
-}
+	AddIPPNATRule := &cobra.Command{
+		Use:     "add --ip IP_ADDRESS --server-uuid SERVER_UUID [--transparent | --protocol --port-src --port-dst]",
+		Aliases: []string{"new"},
+		Short:   "Add a PNAT rule.",
+		Long:    "Add a PNAT rule from a public IP to a managed server.",
+		Run:     cmd.runMiddleware.IPPNATRuleAdd,
+	}
 
-func pnatCmdAdd() {
-	rootCmd.AddCommand(pnat)
+	DelIPPNATRule := &cobra.Command{
+		Use:     "del --ip IP_ADDRESS --server-uuid SERVER_UUID [--transparent | --protocol --port-src --port-dst]",
+		Aliases: []string{"rm"},
+		Short:   "Delete a PNAT rule.",
+		Long:    "Delete a PNAT rule between a public IP and a managed server.",
+		Run:     cmd.runMiddleware.IPPNATRuleDel,
+	}
+
+	cmd.RootCommand.AddCommand(pnat)
 	pnat.AddCommand(ListServerPNATRules, AddIPPNATRule, DelIPPNATRule)
 
 	ListServerPNATRules.Flags().StringP("server-uuid", "s", "", "Set server UUID.")

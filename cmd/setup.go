@@ -8,68 +8,49 @@ import (
 	"os/user"
 	"runtime"
 	"strings"
-	. "titan-sc/api"
+	"titan-sc/api"
 )
 
 const (
-	VersionMajor   = 1
-	VersionMinor   = 2
-	VersionPatch   = 0
 	LocalApp       = "./titan-sc"
 	UsrLocalBinApp = "/usr/local/bin/titan-sc"
 )
 
-var weatherMap = &cobra.Command{
-	Use:   "weathermap",
-	Short: "Show weather map.",
-	Long:  "Show weathermap.",
-	Run:   API.WeatherMap,
-}
+func (cmd *CMD) SetupCmdAdd() {
 
-var addTokenCmd = &cobra.Command{
-	Use:   "setup --token \"token-string\"",
-	Short: "Automated config/install.",
-	Long:  "Automated config/install.",
-	Run:   InitApp,
-}
+	addTokenCmd := &cobra.Command{
+		Use:   "setup --token \"token-string\"",
+		Short: "Automated config/install.",
+		Long:  "Automated config/install.",
+		Run:   cmd.setupApp,
+	}
 
-var managedServices = &cobra.Command{
-	Use:   "managed-services --company-uuid COMPANY_UUID",
-	Short: "Enable managed services.",
-	Long:  "Enable managed services.",
-	Run:   API.ManagedServices,
-}
-
-func utilsCmdAdd() {
-	rootCmd.AddCommand(weatherMap, addTokenCmd, managedServices)
+	cmd.RootCommand.AddCommand(addTokenCmd)
 
 	addTokenCmd.Flags().StringP("token", "t", "", "Set user API token.")
 	_ = addTokenCmd.MarkFlagRequired("token")
-
-	managedServices.Flags().StringP("company-uuid", "s", "", "Set company UUID.")
-	_ = managedServices.MarkFlagRequired("company-uuid")
 }
 
-func InitApp(cmd *cobra.Command, args []string) {
+func (cmd *CMD) setupApp(cobraCommand *cobra.Command, args []string) {
 	_ = args
-	API.ParseGlobalFlags(cmd)
-	token, _ := cmd.Flags().GetString("token")
+	cmd.runMiddleware.ParseGlobalFlags(cobraCommand)
+	token, _ := cobraCommand.Flags().GetString("token")
 	var err error
 
 	if runtime.GOOS == "windows" {
-		path := ConfigFileName
-		err = InitCreateFile(path, token)
+		path := cmd.configFileName
+		err = initCreateFile(path, token)
 	} else {
-		err = InitAppUnixLike(token)
+		err = initAppUnixLike(token, cmd.configFileName)
 	}
 	if err != nil {
-		fmt.Println(err.Error())
+		cmd.runMiddleware.OutputError(err)
 	} else {
 		fmt.Println("Init success.")
 	}
 }
 
-func InitAppUnixLike(token string) error {
+func initAppUnixLike(token, configFileName string) error {
 	// check user UID
 	usr, err := user.Current()
 	if err != nil {
@@ -79,7 +60,7 @@ func InitAppUnixLike(token string) error {
 		return fmt.Errorf("You must have root privileges to use the 'setup' command.")
 	}
 
-	// install bin in /usr/local/bin
+	// Install bin in /usr/local/bin
 	_, err = os.Stat(UsrLocalBinApp)
 	if !os.IsNotExist(err) {
 		if err := os.Remove(UsrLocalBinApp); err != nil {
@@ -96,14 +77,14 @@ func InitAppUnixLike(token string) error {
 			return fmt.Errorf("Init: create dir path <%s> error.", path)
 		}
 	}
-	path = path + "/" + ConfigFileName
-	return InitCreateFile(path, token)
+	path = path + "/" + configFileName
+	return initCreateFile(path, token)
 }
 
-func InitCreateFile(path, token string) error {
+func initCreateFile(path, token string) error {
 	data := map[string]interface{}{
 		"token": token,
-		"uri":   DefaultURI,
+		"uri":   api.DefaultURI,
 	}
 	viper.Set("default", data)
 	viper.SetConfigType("toml")

@@ -2,33 +2,33 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	. "titan-sc/api"
 )
 
-var company = &cobra.Command{
-	Use:     "company",
-	Aliases: []string{"co"},
-	Short:   "Retrieve information about your companies.",
-}
+func (cmd *CMD) CompanyCmdAdd() {
 
-var companyList = &cobra.Command{
-	Use:     "list",
-	Aliases: []string{"ls"},
-	Short:   "List all your companies.",
-	Long:    "List all your companies.",
-	Run:     API.CompaniesList,
-}
+	company := &cobra.Command{
+		Use:     "company",
+		Aliases: []string{"co"},
+		Short:   "Retrieve information about your companies.",
+	}
 
-var companyShow = &cobra.Command{
-	Use:     "show --company-uuid COMPANY_UUID",
-	Aliases: []string{"get"},
-	Short:   "Show company detail.",
-	Long:    "Show detailed information about a company.",
-	Run:     API.CompanyDetail,
-}
+	companyList := &cobra.Command{
+		Use:     "list",
+		Aliases: []string{"ls"},
+		Short:   "List all your companies.",
+		Long:    "List all your companies.",
+		Run:     cmd.runMiddleware.CompaniesList,
+	}
 
-func companyCmdAdd() {
-	rootCmd.AddCommand(company)
+	companyShow := &cobra.Command{
+		Use:     "show --company-uuid COMPANY_UUID",
+		Aliases: []string{"get"},
+		Short:   "Show company detail.",
+		Long:    "Show detailed information about a company.",
+		Run:     cmd.runMiddleware.CompanyDetail,
+	}
+
+	cmd.RootCommand.AddCommand(company)
 	company.AddCommand(companyList, companyShow)
 
 	companyShow.Flags().StringP("company-uuid", "c", "", "Set company UUID.")

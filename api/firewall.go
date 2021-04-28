@@ -1,22 +1,8 @@
 package api
 
-import (
-	"encoding/json"
-	"fmt"
-	"github.com/spf13/cobra"
-	"os"
-	"text/tabwriter"
-)
+import "encoding/json"
 
-func (API *APITitan) FirewallAddRule(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-	networkUUID, _ := cmd.Flags().GetString("network-uuid")
-	serverUUID, _ := cmd.Flags().GetString("server-uuid")
-	protocol, _ := cmd.Flags().GetString("protocol")
-	port, _ := cmd.Flags().GetString("port")
-	source, _ := cmd.Flags().GetString("source")
-
+func (API *API) PostFirewallAdd(networkUUID, serverUUID, protocol, port, source string) (*APIReturn, error) {
 	firewallOpt := APINetworkFirewallRule{
 		ServerUUID: serverUUID,
 		Protocol:   protocol,
@@ -24,18 +10,11 @@ func (API *APITitan) FirewallAddRule(cmd *cobra.Command, args []string) {
 		Source:     source,
 	}
 
-	API.SendAndPrintDefaultReply(HTTPPost, "/compute/networks/"+networkUUID+"/firewall", firewallOpt)
+	_, apiReturn, err := API.SendRequestToAPI(HTTPPost, "/compute/networks/"+networkUUID+"/firewall", firewallOpt)
+	return apiReturn, err
 }
 
-func (API *APITitan) FirewallDelRule(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-	networkUUID, _ := cmd.Flags().GetString("network-uuid")
-	serverUUID, _ := cmd.Flags().GetString("server-uuid")
-	protocol, _ := cmd.Flags().GetString("protocol")
-	port, _ := cmd.Flags().GetString("port")
-	source, _ := cmd.Flags().GetString("source")
-
+func (API *API) DeleteFirewall(networkUUID, serverUUID, protocol, port, source string) (*APIReturn, error) {
 	firewallOpt := APINetworkFirewallRule{
 		ServerUUID: serverUUID,
 		Protocol:   protocol,
@@ -43,42 +22,18 @@ func (API *APITitan) FirewallDelRule(cmd *cobra.Command, args []string) {
 		Source:     source,
 	}
 
-	API.SendAndPrintDefaultReply(HTTPDelete, "/compute/networks/"+networkUUID+"/firewall", firewallOpt)
+	_, apiReturn, err := API.SendRequestToAPI(HTTPDelete, "/compute/networks/"+networkUUID+"/firewall", firewallOpt)
+	return apiReturn, err
 }
 
-func (API *APITitan) FirewallListRules(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-	networkUUID, _ := cmd.Flags().GetString("network-uuid")
-
-	err := API.SendAndResponse(HTTPGet, "/compute/networks/"+networkUUID+"/firewall", nil)
-	if err != nil {
-		fmt.Println(err.Error())
+func (API *API) GetFireWallFullInfos(networkUUID string) (*APINetworkFullInfosFirewall, error) {
+	apiResponseBody, apiReturn, err := API.SendRequestToAPI(HTTPGet, "/compute/networks/"+networkUUID+"/firewall", nil)
+	if err = handlePotentialDoubleError(apiReturn, err); err != nil {
+		return nil, err
 	}
-	if !API.HumanReadable {
-		API.PrintJson()
-	} else {
-		var apiReplyFirewall APINetworkFullInfosFirewall
-		if err := json.Unmarshal(API.RespBody, &apiReplyFirewall); err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		API.FirewallPrint(&apiReplyFirewall)
+	firewallFullInfos := new(APINetworkFullInfosFirewall)
+	if err = json.Unmarshal(apiResponseBody, firewallFullInfos); err != nil {
+		return nil, err
 	}
-}
-
-func (API *APITitan) FirewallPrint(firewallInfos *APINetworkFullInfosFirewall) {
-
-	fmt.Println("Policy: " + firewallInfos.Policy)
-
-	var w *tabwriter.Writer
-	if API.HumanReadable {
-		w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	}
-
-	_, _ = fmt.Fprintf(w, "Server UUID\tProtocol\tPort\tSource\t\n")
-	for _, rule := range firewallInfos.Rules {
-		_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t\n", rule.Server, rule.Protocol, rule.Port, rule.Source)
-	}
-	_ = w.Flush()
+	return firewallFullInfos, err
 }

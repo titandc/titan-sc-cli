@@ -1,93 +1,37 @@
 package api
 
-import (
-	"encoding/json"
-	"fmt"
-	"github.com/spf13/cobra"
-	"os"
-	"text/tabwriter"
-)
+import "encoding/json"
 
-func (API *APITitan) IPAttach(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-	serverUUID, _ := cmd.Flags().GetString("server-uuid")
-	ip, _ := cmd.Flags().GetString("ip")
-
-	ipOpt := []APIIPAttachDetach{{
-		IP:      ip,
-		Version: 4,
-	}}
-	API.SendAndPrintDefaultReply(HTTPPost, "/compute/servers/"+serverUUID+"/ips", ipOpt)
+func (API *API) PostIPAttach(serverUUID string, ipOpt []APIIPAttachDetach) (*APIReturn, error) {
+	_, apiReturn, err := API.SendRequestToAPI(HTTPPost, "/compute/servers/"+serverUUID+"/ips", ipOpt)
+	return apiReturn, err
 }
 
-func (API *APITitan) IPDetach(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-	serverUUID, _ := cmd.Flags().GetString("server-uuid")
-	ip, _ := cmd.Flags().GetString("ip")
-
-	ipOpt := APIIPAttachDetach{
-		IP:      ip,
-		Version: 4,
-	}
-	API.SendAndPrintDefaultReply(HTTPDelete, "/compute/servers/"+serverUUID+"/ips", ipOpt)
+func (API *API) DeleteIPDetach(serverUUID string, ipOpt APIIPAttachDetach) (*APIReturn, error) {
+	_, apiReturn, err := API.SendRequestToAPI(HTTPDelete, "/compute/servers/"+serverUUID+"/ips", ipOpt)
+	return apiReturn, err
 }
 
-func (API *APITitan) IPsList(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-
-	err := API.SendAndResponse(HTTPGet, "/compute/ips", nil)
-	if err != nil {
-		fmt.Println(err.Error())
+func (API *API) GetIPList() ([]APIIPAttachDetach, error) {
+	apiResponseBody, apiReturn, err := API.SendRequestToAPI(HTTPGet, "/compute/ips", nil)
+	if err = handlePotentialDoubleError(apiReturn, err); err != nil {
+		return nil, err
 	}
-	if !API.HumanReadable {
-		API.PrintJson()
-	} else {
-		APIIP := make([]APIIPAttachDetach, 0)
-		if err := json.Unmarshal(API.RespBody, &APIIP); err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		API.IPsPrint(&APIIP)
+	ipList := make([]APIIPAttachDetach, 0)
+	if err = json.Unmarshal(apiResponseBody, &ipList); err != nil {
+		return nil, err
 	}
+	return ipList, nil
 }
 
-func (API *APITitan) IPsCompanyList(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-	companyUUID, _ := cmd.Flags().GetString("company-uuid")
-
-	err := API.SendAndResponse(HTTPGet, "/companies/"+companyUUID+"/ips", nil)
-	if err != nil {
-		fmt.Println(err.Error())
+func (API *API) GetCompanyIPList(companyUUID string) ([]APIIPAttachDetach, error) {
+	apiResponseBody, apiReturn, err := API.SendRequestToAPI(HTTPGet, "/companies/"+companyUUID+"/ips", nil)
+	if err = handlePotentialDoubleError(apiReturn, err); err != nil {
+		return nil, err
 	}
-	if !API.HumanReadable {
-		API.PrintJson()
-	} else {
-		var APIIP []APIIPAttachDetach
-
-		if err := json.Unmarshal(API.RespBody, &APIIP); err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		API.IPsPrint(&APIIP)
+	ipList := new([]APIIPAttachDetach)
+	if err = json.Unmarshal(apiResponseBody, ipList); err != nil {
+		return nil, err
 	}
-}
-
-func (API *APITitan) IPsPrint(ipArray *[]APIIPAttachDetach) {
-	if len(*ipArray) == 0 {
-		fmt.Println("Empty IPs list")
-		return
-	}
-
-	var w *tabwriter.Writer
-	w = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-
-	_, _ = fmt.Fprintf(w, "IP\tVERSION\t\n")
-	for _, ip := range *ipArray {
-		_, _ = fmt.Fprintf(w, "%s\t%d\t\n", ip.IP, ip.Version)
-	}
-	_ = w.Flush()
+	return *ipList, nil
 }

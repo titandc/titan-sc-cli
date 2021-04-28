@@ -1,6 +1,12 @@
 
 # ChangeLog
 
+## 3.0.0
+
+- Implement 'run' middleware package to fully separate 'api' and 'cmd'
+- Add new interactive 'snapshot rotate' command
+- Add new flag to 'snapshot create' to force rotation
+
 ## 2.1.5
 
 - Add servers notifications output

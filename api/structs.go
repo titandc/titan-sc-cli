@@ -9,45 +9,46 @@ package api
  *
  *
  */
-
-type APITitan struct {
-	HumanReadable bool
-	Color         bool
-	CLIVersion    string
-	CLIos         string
-	Token         string
-	URI           string
-	RespBody      []byte
-}
+/*
+ *
+ *
+ ******************
+ * API structure
+ ******************
+ *
+ *
+ */
 
 type APISize struct {
 	Unit  string `json:"unit"`
-	Value int    `json:"value"`
+	Value int32  `json:"value"`
 }
 
 type APIServer struct {
 	UUID       string `json:"uuid"`
 	Login      string `json:"user_login"`
-	OS         string `json:"os"`
 	Name       string `json:"Name"`
-	Plan       string `json:"Plan"`
-	State      string `json:"State"`
+	Plan       string `json:"plan"`
+	State      string `json:"state"`
 	Template   string `json:"template"`
 	Hypervisor struct {
 		UUID     string `json:"uuid"`
 		Hostname string `json:"hostname"`
 		State    string `json:"state"`
 	} `json:"hypervisor"`
-	Reverse      string `json:"reverse"`
-	Gateway      string `json:"gateway"`
-	Mac          string `json:"mac"`
-	IP           string `json:"ip"`
+	Reverse string `json:"reverse"`
+	Gateway string `json:"gateway"`
+	Mac     string `json:"mac"`
+	IPs     []struct {
+		IP   string `json:"ip"`
+		Type int64  `json:"type"`
+	} `json:"ips"`
 	IPv6         string `json:"ipv6"`
 	CompanyName  string `json:"company"`
-	Creationdate int64  `json:"creation_date"`
+	CreationDate int64  `json:"creation_date"`
 	Notes        string `json:"notes"`
 	Bandwidth    struct {
-		Uint   string `json:"unit"`
+		Unit   string `json:"unit"`
 		Input  int    `json:"input"`
 		Output int    `json:"output"`
 	} `json:"bandwidth"`
@@ -81,6 +82,10 @@ type APIServerUpdateInfos struct {
 	Name    string `json:"name"`
 	Notes   string `json:"notes"`
 	Reverse string `json:"reverse"`
+}
+
+type APIDeleteServer struct {
+	Reason string `json:"reason"`
 }
 
 type APIISO struct {
@@ -154,11 +159,11 @@ type APIServerAction struct {
 }
 
 type APISnapshot struct {
+	UUID      string  `json:"uuid"`
 	CreatedAt string  `json:"created_at"`
 	Name      string  `json:"name"`
 	Size      APISize `json:"size"`
 	State     string  `json:"state"`
-	UUID      string  `json:"uuid"`
 }
 
 type APIHistoryEvent struct {
@@ -192,10 +197,10 @@ type APIWeatherMap struct {
 }
 
 type APINetworkCreate struct {
-	MaxMTU int     `json:"max_mtu"`
 	Name   string  `json:"name"`
-	Ports  int     `json:"ports"`
-	Speed  APISize `json:"value"`
+	MaxMTU int32   `json:"max_mtu"`
+	Ports  int32   `json:"ports"`
+	Speed  APISize `json:"speed"`
 	CIDR   string  `json:"cidr,omitempty"`
 }
 
@@ -259,6 +264,7 @@ type APIServerLOadISORequest struct {
 }
 
 type APIReturn struct {
+	Code    string `json:"code" binding:"required"`
 	Success string `json:"success,omitempty"`
 	Error   string `json:"error,omitempty"`
 }

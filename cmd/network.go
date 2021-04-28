@@ -2,84 +2,84 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	. "titan-sc/api"
 )
 
-var network = &cobra.Command{
-	Use:     "network",
-	Aliases: []string{"net"},
-	Short:   "Manage private networks.",
-}
+func (cmd *CMD) NetworkCmdAdd() {
 
-var networkList = &cobra.Command{
-	Use:     "list [--company-uuid COMPANY_UUID]",
-	Aliases: []string{"ls"},
-	Short:   "List all networks within your company.",
-	Long:    "List all private networks created within your default company, another company UUID may be given.",
-	Run:     API.NetworkList,
-}
+	network := &cobra.Command{
+		Use:     "network",
+		Aliases: []string{"net"},
+		Short:   "Manage private networks.",
+	}
 
-var networkDetail = &cobra.Command{
-	Use:     "show --network-uuid NETWORK_UUID",
-	Aliases: []string{"get"},
-	Short:   "Show network detail.",
-	Long:    "Show detailed information about a network.",
-	Run:     API.NetworkDetail,
-}
+	networkList := &cobra.Command{
+		Use:     "list [--company-uuid COMPANY_UUID]",
+		Aliases: []string{"ls"},
+		Short:   "List all networks within your company.",
+		Long:    "List all private networks created within your default company, another company UUID may be given.",
+		Run:     cmd.runMiddleware.NetworkList,
+	}
 
-var networkCreate = &cobra.Command{
-	Use:     "create --company-uuid COMPANY_UUID --name NETWORK_NAME --cidr CIDR_VALUE",
-	Aliases: []string{"add"},
-	Short:   "Create a new network.",
-	Long:    "Create a new private network.",
-	Run:     API.NetworkCreate,
-}
+	networkDetail := &cobra.Command{
+		Use:     "show --network-uuid NETWORK_UUID",
+		Aliases: []string{"get"},
+		Short:   "Show network detail.",
+		Long:    "Show detailed information about a network.",
+		Run:     cmd.runMiddleware.NetworkDetail,
+	}
 
-var networkDelete = &cobra.Command{
-	Use:     "delete --network-uuid NETWORK_UUID",
-	Aliases: []string{"del"},
-	Short:   "Delete a network.",
-	Long:    "Completely delete a private network by UUID.",
-	Run:     API.NetworkRemove,
-}
+	networkCreate := &cobra.Command{
+		Use:     "create --company-uuid COMPANY_UUID --name NETWORK_NAME --cidr CIDR_VALUE",
+		Aliases: []string{"add"},
+		Short:   "Create a new network.",
+		Long:    "Create a new private network.",
+		Run:     cmd.runMiddleware.NetworkCreate,
+	}
 
-var networkAttachServer = &cobra.Command{
-	Use:   "attach --server-uuid SERVER_UUID --network-uuid NETWORK_UUID",
-	Short: "Attach a server on private network.",
-	Long:  "Attach a server on private network.",
-	Run:   API.NetworkAttachServer,
-}
+	networkDelete := &cobra.Command{
+		Use:     "delete --network-uuid NETWORK_UUID",
+		Aliases: []string{"del"},
+		Short:   "Delete a network.",
+		Long:    "Completely delete a private network by UUID.",
+		Run:     cmd.runMiddleware.NetworkRemove,
+	}
 
-var networkDetachServer = &cobra.Command{
-	Use:   "detach --server-uuid SERVER_UUID --network-uuid NETWORK_UUID",
-	Short: "Detach a server from private network.",
-	Long:  "Detach a server from private network.",
-	Run:   API.NetworkDetachServer,
-}
+	networkAttachServer := &cobra.Command{
+		Use:   "attach --server-uuid SERVER_UUID --network-uuid NETWORK_UUID",
+		Short: "Attach a server on private network.",
+		Long:  "Attach a server on private network.",
+		Run:   cmd.runMiddleware.NetworkAttachServer,
+	}
 
-var networkRename = &cobra.Command{
-	Use:   "rename --name NEW_NAME --network-uuid NETWORK_UUID",
-	Short: "Rename a network.",
-	Long:  "Update the name of a private network, no space or special characters accepted.",
-	Run:   API.NetworkRename,
-}
+	networkDetachServer := &cobra.Command{
+		Use:   "detach --server-uuid SERVER_UUID --network-uuid NETWORK_UUID",
+		Short: "Detach a server from private network.",
+		Long:  "Detach a server from private network.",
+		Run:   cmd.runMiddleware.NetworkDetachServer,
+	}
 
-var networkSetGW = &cobra.Command{
-	Use:   "set-gw --ip IP_ADDRESS --network-uuid NETWORK_UUID",
-	Short: "Set the gateway for a managed network.",
-	Long:  "Set the gateway for a managed network.",
-	Run:   API.NetworkSetGateway,
-}
+	networkRename := &cobra.Command{
+		Use:   "rename --name NEW_NAME --network-uuid NETWORK_UUID",
+		Short: "Rename a network.",
+		Long:  "Update the name of a private network, no space or special characters accepted.",
+		Run:   cmd.runMiddleware.NetworkRename,
+	}
 
-var networkUnsetGW = &cobra.Command{
-	Use:   "unset-gw --network-uuid NETWORK_UUID",
-	Short: "Unset the gateway of a managed network.",
-	Long:  "Unset the gateway of a managed network.",
-	Run:   API.NetworkUnsetGateway,
-}
+	networkSetGW := &cobra.Command{
+		Use:   "set-gw --ip IP_ADDRESS --network-uuid NETWORK_UUID",
+		Short: "Set the gateway for a managed network.",
+		Long:  "Set the gateway for a managed network.",
+		Run:   cmd.runMiddleware.NetworkSetGateway,
+	}
 
-func networkCmdAdd() {
-	rootCmd.AddCommand(network)
+	networkUnsetGW := &cobra.Command{
+		Use:   "unset-gw --network-uuid NETWORK_UUID",
+		Short: "Unset the gateway of a managed network.",
+		Long:  "Unset the gateway of a managed network.",
+		Run:   cmd.runMiddleware.NetworkUnsetGateway,
+	}
+
+	cmd.RootCommand.AddCommand(network)
 	network.AddCommand(networkList, networkDetail, networkCreate, networkDelete,
 		networkAttachServer, networkDetachServer, networkRename,
 		networkSetGW, networkUnsetGW)
@@ -89,7 +89,6 @@ func networkCmdAdd() {
 	networkCreate.Flags().StringP("cidr", "c", "", "Provide a CIDR to enable managed network.")
 	_ = networkCreate.MarkFlagRequired("network-uuid")
 	_ = networkCreate.MarkFlagRequired("name")
-	_ = networkCreate.MarkFlagRequired("cidr")
 
 	networkList.Flags().StringP("company-uuid", "c", "", "Set company UUID.")
 

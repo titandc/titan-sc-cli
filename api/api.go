@@ -3,10 +3,8 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"github.com/spf13/cobra"
+	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -16,363 +14,82 @@ const (
 	HTTPPut    = http.MethodPut
 	HTTPPost   = http.MethodPost
 	HTTPDelete = http.MethodDelete
-	// Get N history entry
-	NHistory = 25
 )
 
-/*
- *
- *
- ******************
- * Global variable
- ******************
- *
- *
- */
-var API = &APITitan{
-	Token:         "",
-	URI:           "",
-	HumanReadable: false,
-	Color:         true,
+type API struct {
+	Token   string
+	URI     string
+	OS      string
+	Version string
 }
 
-/*
- *
- *
- ******************
- * history function
- ******************
- *
- *
- */
-func (API *APITitan) HistoryCompanyEvent(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-	serverUUID, _ := cmd.Flags().GetString("server-uuid")
-	companyUUID, _ := cmd.Flags().GetString("company-uuid")
-	number, _ := cmd.Flags().GetInt("number")
-
-	if serverUUID != "" && companyUUID != "" ||
-		(companyUUID == "" && serverUUID == "") {
-		_ = cmd.Help()
-		return
+func NewAPI(token, uri, os, version string) *API {
+	if uri == "" {
+		uri = DefaultURI
 	}
-
-	if number < 1 {
-		number = NHistory
-	}
-	strNumber := fmt.Sprintf("%d", number)
-
-	if companyUUID != "" {
-		API.HistoryByCompany(strNumber, companyUUID)
-	} else {
-		API.HistoryByServer(strNumber, serverUUID)
+	return &API{
+		Token:   token,
+		URI:     uri,
+		OS:      os,
+		Version: version,
 	}
 }
 
-func (API *APITitan) HistoryByCompany(number, companyUUID string) {
-	path := "/compute/servers/events?nb="+number+"&company_uuid="+companyUUID
-	err := API.SendAndResponse(HTTPGet, path, nil)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
+func (API *API) SendRequestToAPI(method, path string, httpData interface{}) ([]byte, *APIReturn, error) {
 
-	if !API.HumanReadable {
-		API.PrintJson()
-	} else {
-		var history []APIHistoryEvent
-
-		if err := json.Unmarshal(API.RespBody, &history); err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		for _, event := range history {
-			date := API.DateFormat(event.Timestamp)
-			fmt.Printf("Server UUID:\r\t\t%s\n"+
-				"Server Name:\r\t\t%s\n"+
-				"Event type:\r\t\t%s (%s)\n"+
-				"Event status:\r\t\t%s\n"+
-				"Date:\r\t\t%s\n\n",
-				event.Server.UUID, event.Server.Name, event.Type,
-				event.State, event.Status, date)
-		}
-	}
-}
-
-func (API *APITitan) HistoryByServer(number, serverUUID string) {
-	path := "/compute/servers/"+serverUUID+"/events?nb="+number
-	err := API.SendAndResponse(HTTPGet, path, nil)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	if !API.HumanReadable {
-		API.PrintJson()
-	} else {
-		var history []APIHistoryEvent
-		if err := json.Unmarshal(API.RespBody, &history); err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		for _, event := range history {
-			date := API.DateFormat(event.Timestamp)
-			fmt.Printf("Event type:\r\t\t%s (%s)\n"+
-				"Event status:\r\t\t%s\n"+
-				"Date:\r\t\t%s\n\n",
-				event.Type, event.State, event.Status, date)
-		}
-	}
-}
-
-/*
- *
- *
- *****************
- * IP Kvm function
- *****************
- *
- *
- */
-func (API *APITitan) KVMIPGetInfos(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-	serverUUID, _ := cmd.Flags().GetString("server-uuid")
-
-	err := API.SendAndResponse(HTTPGet, "/compute/servers/"+serverUUID+"/ipkvm", nil)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	if !API.HumanReadable {
-		API.PrintJson()
-	} else {
-		API.IPKvmPrint(serverUUID)
-	}
-}
-
-func (API *APITitan) KVMIPStart(cmd *cobra.Command, args []string) {
-	_ = args
-	API.IPKvmAction("start", cmd)
-}
-
-func (API *APITitan) KVMIPStop(cmd *cobra.Command, args []string) {
-	_ = args
-	API.IPKvmAction("stop", cmd)
-}
-
-func (API *APITitan) IPKvmAction(action string, cmd *cobra.Command) {
-	API.ParseGlobalFlags(cmd)
-	serverUUID, _ := cmd.Flags().GetString("server-uuid")
-
-	act := APIServerAction{
-		Action: action,
-	}
-	API.SendAndPrintDefaultReply(HTTPPut, "/compute/servers/"+serverUUID+"/ipkvm", act)
-}
-
-func (API *APITitan) IPKvmPrint(serverUUID string) {
-	ipkvm := &APIKvmIP{}
-	if err := json.Unmarshal(API.RespBody, ipkvm); err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	fmt.Printf("IP KVM informations:\n  Server UUID: %s\n  Status: %s\n", serverUUID, ipkvm.Status)
-	if ipkvm.URI != "" {
-		fmt.Println("  URI:", ipkvm.URI)
-	}
-}
-
-/*
- *
- *
- *********************
- * Other API function
- *********************
- *
- *
- */
-func (API *APITitan) WeatherMap(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-
-	if err := API.SendAndResponse(HTTPGet, "/weather", nil); err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	if !API.HumanReadable {
-		API.PrintJson()
-	} else {
-		weatherMap := &APIWeatherMap{}
-		if err := json.Unmarshal(API.RespBody, weatherMap); err != nil {
-			log.Println(err.Error())
-			return
-		}
-		fmt.Printf("Titan Weather Map:\n"+
-			"  Compute: %s\n"+
-			"  Storage: %s\n"+
-			"  Public network: %s\n"+
-			"  Private network: %s\n",
-			weatherMap.Compute, weatherMap.Storage,
-			weatherMap.PublicNetwork, weatherMap.PrivateNetwork)
-	}
-}
-
-func (API *APITitan) ManagedServices(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-	companyUUID, _ := cmd.Flags().GetString("company-uuid")
-
-	managedServicesOpts := APIManagedServices{
-		Company: companyUUID,
-	}
-	API.SendAndPrintDefaultReply(HTTPPost, "/compute/managed_services", managedServicesOpts)
-}
-
-func (API *APITitan) IsAdmin() (bool, error) {
-	if err := API.SendAndResponse(HTTPGet, "/auth/user/isadmin", nil); err != nil {
-		return false, err
-	}
-
-	buffer := IsAdminStruct{}
-	if err := json.Unmarshal(API.RespBody, &buffer); err != nil {
-		return false, err
-	}
-	return buffer.Admin, nil
-}
-
-/*
- *
- *
- ******************
- * Utils function
- ******************
- *
- *
- */
-func (API *APITitan) VersionAPI(cmd *cobra.Command, args []string) {
-	_ = args
-	API.ParseGlobalFlags(cmd)
-
-	if err := API.SendAndResponse(HTTPGet, "/version", nil); err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	if !API.HumanReadable {
-		API.PrintJson()
-	} else {
-		version := &APIVersion{}
-		if err := json.Unmarshal(API.RespBody, version); err != nil {
-			log.Println(err.Error())
-			return
-		}
-		fmt.Println("Titan API version:", version.Version)
-	}
-}
-
-func (API *APITitan) DefaultPrintReturn() {
-	APIRet := &APIReturn{}
-	err := json.Unmarshal(API.RespBody, APIRet)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	if APIRet.Success != "" {
-		fmt.Println(APIRet.Success)
-	} else {
-		fmt.Println("Error:", APIRet.Error)
-	}
-}
-
-func (API *APITitan) PrintJson() {
-	dst := &bytes.Buffer{}
-	if err := json.Indent(dst, API.RespBody, "", "  "); err != nil {
-		fmt.Printf(string(API.RespBody))
-		return
-	}
-	fmt.Printf(dst.String())
-}
-
-func (API *APITitan) ParseGlobalFlags(cmd *cobra.Command) {
+	// Transform interface to byte array
+	var reqData []byte
 	var err error
-
-	API.HumanReadable, err = cmd.Flags().GetBool("human")
-	if err != nil {
-		API.HumanReadable = false
+	if httpData != nil {
+		reqData, err = json.Marshal(httpData)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
-	API.Color, err = cmd.Flags().GetBool("color")
+	// Prepare new request
+	request, err := http.NewRequest(method, API.URI+path, bytes.NewBuffer(reqData))
 	if err != nil {
-		API.Color = false
-	}
-}
-
-func (API *APITitan) SendAndResponse(method, path string, req []byte) error {
-	request, err := http.NewRequest(method, API.URI+path, bytes.NewBuffer(req))
-	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	request.Header.Add("X-API-KEY", API.Token)
-	request.Header.Add("Titan-Cli-Os", API.CLIos)
-	request.Header.Add("Titan-Cli-Version", API.CLIVersion)
+	request.Header.Add("Titan-Cli-Os", API.OS)
+	request.Header.Add("Titan-Cli-Version", API.Version)
 	request.Header.Set("Content-Type", "application/json; charset=utf-8")
 
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
+	// Execute request
+	client := &http.Client{}
 	resp, err := client.Do(request)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
 
-	API.RespBody, err = ioutil.ReadAll(resp.Body)
+	// Read API output
+	apiResponseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Try to unmarshal as API generic output (code, error/success)
+	apiReturn := &APIReturn{}
+	err = json.Unmarshal(apiResponseBody, apiReturn)
+	if err == nil && (apiReturn.Error != "" || apiReturn.Success != "") {
+		return apiResponseBody, apiReturn, nil
+	}
+
+	// Return raw data
+	return apiResponseBody, nil, nil
+}
+
+
+func handlePotentialDoubleError(apiReturn *APIReturn, err error) error {
 	if err != nil {
 		return err
 	}
-
-	// Check command error
-	APIRet := &APIReturn{}
-	err = json.Unmarshal(API.RespBody, APIRet)
-	if err == nil && APIRet.Error != "" {
-		if API.HumanReadable {
-			return fmt.Errorf("Error: %s.", APIRet.Error)
-		} else {
-			return fmt.Errorf(string(API.RespBody))
-		}
+	if apiReturn != nil && apiReturn.Error != "" {
+		return errors.New(apiReturn.Error)
 	}
 	return nil
 }
 
-func (API *APITitan) SendAndPrintDefaultReply(httpMethod, path string, httpData interface{}) {
-	var reqData []byte
-	var err error
-
-	reqData = nil
-	if httpData != nil {
-		reqData, err = json.Marshal(httpData)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-	}
-
-	println(string(reqData))
-
-	err = API.SendAndResponse(httpMethod, path, reqData)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	if !API.HumanReadable {
-		API.PrintJson()
-	} else {
-		API.DefaultPrintReturn()
-	}
-}

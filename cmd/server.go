@@ -2,137 +2,137 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	. "titan-sc/api"
 )
 
-var server = &cobra.Command{
-	Use:     "server",
-	Aliases: []string{"srv"},
-	Short:   "Manage servers.",
-	Long:    "Manage servers.",
-}
+func (cmd *CMD) ServerCmdAdd() {
 
-var serverList = &cobra.Command{
-	Use:     "list",
-	Aliases: []string{"ls"},
-	Short:   "Show detail of all servers in your companies.",
-	Long:    "Show detail of all servers in your companies.",
-	Run:     API.ServerList,
-}
+	server := &cobra.Command{
+		Use:     "server",
+		Aliases: []string{"srv"},
+		Short:   "Manage servers.",
+		Long:    "Manage servers.",
+	}
 
-var serverDetail = &cobra.Command{
-	Use:     "show --server-uuid SERVER_UUID",
-	Aliases: []string{"get"},
-	Short:   "Show server detail.",
-	Long:    "Show detailed information about a server.",
-	Run:     API.ServerDetail,
-}
+	serverList := &cobra.Command{
+		Use:     "list",
+		Aliases: []string{"ls"},
+		Short:   "Show detail of all servers in your companies.",
+		Long:    "Show detail of all servers in your companies.",
+		Run:     cmd.runMiddleware.ServerList,
+	}
 
-var serverStart = &cobra.Command{
-	Use:   "start --server-uuid SERVER_UUID",
-	Short: "Send an action request to start a server.",
-	Long: "Send an action request to start a server." +
-		"\nList of available actions:" +
-		"\n  start\n  stop\n  hardstop\n  reboot\n",
-	Run:  API.ServerStart,
-}
+	serverDetail := &cobra.Command{
+		Use:     "show --server-uuid SERVER_UUID",
+		Aliases: []string{"get"},
+		Short:   "Show server detail.",
+		Long:    "Show detailed information about a server.",
+		Run:     cmd.runMiddleware.ServerDetail,
+	}
 
-var serverStop = &cobra.Command{
-	Use:   "stop --server-uuid SERVER_UUID",
-	Short: "Send an action request to stop a server.",
-	Long: "Send an action request to stop a server." +
-		"\nList of available actions:" +
-		"\n  start\n  stop\n  hardstop\n  reboot\n",
-	Run:  API.ServerStop,
-}
+	serverStart := &cobra.Command{
+		Use:   "start --server-uuid SERVER_UUID",
+		Short: "Send an action request to start a server.",
+		Long: "Send an action request to start a server." +
+			"\nList of available actions:" +
+			"\n  start\n  stop\n  hardstop\n  reboot\n",
+		Run: cmd.runMiddleware.ServerStart,
+	}
 
-var serverRestart = &cobra.Command{
-	Use:     "restart --server-uuid SERVER_UUID",
-	Aliases: []string{"reboot"},
-	Short:   "Send an action request to restart a server.",
-	Long: "Send an action request to restart a server." +
-		"\nList of available actions:" +
-		"\n  start\n  stop\n  hardstop\n  reboot\n",
-	Run:  API.ServerRestart,
-}
+	serverStop := &cobra.Command{
+		Use:   "stop --server-uuid SERVER_UUID",
+		Short: "Send an action request to stop a server.",
+		Long: "Send an action request to stop a server." +
+			"\nList of available actions:" +
+			"\n  start\n  stop\n  hardstop\n  reboot\n",
+		Run: cmd.runMiddleware.ServerStop,
+	}
 
-var serverHardstop = &cobra.Command{
-	Use:   "hardstop --server-uuid SERVER_UUID",
-	Short: "Send an action request to hardstop a server.",
-	Long: "Send an action request to hardstop a server." +
-		"\nList of available actions:" +
-		"\n  start\n  stop\n  hardstop\n  reboot\n",
-	Run:  API.ServerHardstop,
-}
+	serverRestart := &cobra.Command{
+		Use:     "restart --server-uuid SERVER_UUID",
+		Aliases: []string{"reboot"},
+		Short:   "Send an action request to restart a server.",
+		Long: "Send an action request to restart a server." +
+			"\nList of available actions:" +
+			"\n  start\n  stop\n  hardstop\n  reboot\n",
+		Run: cmd.runMiddleware.ServerRestart,
+	}
 
-var serverChangeName = &cobra.Command{
-	Use:   "rename --server-uuid SERVER_UUID --name NEW_NAME",
-	Short: "Send a request to change server's name.",
-	Long:  "Send a request to change server's name.",
-	Run:   API.ServerChangeName,
-}
+	serverHardstop := &cobra.Command{
+		Use:   "hardstop --server-uuid SERVER_UUID",
+		Short: "Send an action request to hardstop a server.",
+		Long: "Send an action request to hardstop a server." +
+			"\nList of available actions:" +
+			"\n  start\n  stop\n  hardstop\n  reboot\n",
+		Run: cmd.runMiddleware.ServerHardstop,
+	}
 
-var serverChangeReverse = &cobra.Command{
-	Use:   "reverse --server-uuid SERVER_UUID --reverse NEW_REVERSE",
-	Short: "Send a request to change server's reverse.",
-	Long:  "Send a request to change server's reverse.",
-	Run:   API.ServerChangeReverse,
-}
+	serverChangeName := &cobra.Command{
+		Use:   "rename --server-uuid SERVER_UUID --name NEW_NAME",
+		Short: "Send a request to change server's name.",
+		Long:  "Send a request to change server's name.",
+		Run:   cmd.runMiddleware.ServerChangeName,
+	}
 
-var serverLoadISO = &cobra.Command{
-	Use:     "load-iso --uri HTTPS_URI --server-uuid SERVER_UUID",
-	Aliases: []string{"li"},
-	Short:   "Send a request to load an ISO from HTTPS.",
-	Long:    "Send a request to load a bootable ISO from HTTPS.",
-	Run:     API.ServerLoadISO,
-}
+	serverChangeReverse := &cobra.Command{
+		Use:   "reverse --server-uuid SERVER_UUID --reverse NEW_REVERSE",
+		Short: "Send a request to change server's reverse.",
+		Long:  "Send a request to change server's reverse.",
+		Run:   cmd.runMiddleware.ServerChangeReverse,
+	}
 
-var serverUnloadISO = &cobra.Command{
-	Use:     "unload-iso --server-uuid SERVER_UUID",
-	Aliases: []string{"ui"},
-	Short:   "Send a request to unload previously loaded ISO(s).",
-	Long:    "Send a request to unload all previously loaded ISO(s).",
-	Run:     API.ServerUnloadISO,
-}
+	serverLoadISO := &cobra.Command{
+		Use:     "load-iso --uri HTTPS_URI --server-uuid SERVER_UUID",
+		Aliases: []string{"li"},
+		Short:   "Send a request to load an ISO from HTTPS.",
+		Long:    "Send a request to load a bootable ISO from HTTPS.",
+		Run:     cmd.runMiddleware.ServerLoadISO,
+	}
 
-var ServerAddonsList = &cobra.Command{
-	Use:   "addons",
-	Short: "List all server addons.",
-	Long:  "List all server addons.",
-	Run:   API.AddonsListAll,
-}
+	serverUnloadISO := &cobra.Command{
+		Use:     "unload-iso --server-uuid SERVER_UUID",
+		Aliases: []string{"ui"},
+		Short:   "Send a request to unload previously loaded ISO(s).",
+		Long:    "Send a request to unload all previously loaded ISO(s).",
+		Run:     cmd.runMiddleware.ServerUnloadISO,
+	}
 
-var serverGetTemplateList = &cobra.Command{
-	Use:   "templates",
-	Short: "List all server template.",
-	Long:  "List all server template.",
-	Run:   API.ServerGetTemplateList,
-}
+	ServerAddonsList := &cobra.Command{
+		Use:   "addons",
+		Short: "List all server addons.",
+		Long:  "List all server addons.",
+		Run:   cmd.runMiddleware.AddonsListAll,
+	}
 
-var serverCreate = &cobra.Command{
-	Use:   "create --os OS_NAME --os-version OS_VERSION --plan SC1/SC2/SC3",
-	Short: "Send a request for create new server's.",
-	Long:  "Send a request for create new server's.\nGet os and os version see: server templates.",
-	Run:   API.ServerCreate,
-}
+	serverGetTemplateList := &cobra.Command{
+		Use:   "templates",
+		Short: "List all server template.",
+		Long:  "List all server template.",
+		Run:   cmd.runMiddleware.ServerListTemplates,
+	}
 
-var serverDelete = &cobra.Command{
-	Use:     "delete --server-uuid SERVER_UUID",
-	Aliases: []string{"del"},
-	Short:   "Send a request for delete a server's.",
-	Long:    "Send a request for delete a server's.",
-	Run:     API.ServerDelete,
-}
+	serverCreate := &cobra.Command{
+		Use:   "create --os OS_NAME --os-version OS_VERSION --plan SC1/SC2/SC3",
+		Short: "Send a request for create new server's.",
+		Long:  "Send a request for create new server's.\nGet os and os version see: server templates.",
+		Run:   cmd.runMiddleware.ServerCreate,
+	}
 
-var serverReset = &cobra.Command{
-	Use:   "reset --server-uuid SERVER_UUID --os OS_NAME --os-version OS_VERSION",
-	Short: "Send a request for reset a server's.",
-	Long:  "Send a request for reset a server's.",
-	Run:   API.ServerReset,
-}
+	serverDelete := &cobra.Command{
+		Use:     "delete --server-uuid SERVER_UUID",
+		Aliases: []string{"del"},
+		Short:   "Send a request for delete a server's.",
+		Long:    "Send a request for delete a server's.",
+		Run:     cmd.runMiddleware.ServerDelete,
+	}
 
-func serverCmdAdd() {
-	rootCmd.AddCommand(server)
+	serverReset := &cobra.Command{
+		Use:   "reset --server-uuid SERVER_UUID --os OS_NAME --os-version OS_VERSION",
+		Short: "Send a request for reset a server's.",
+		Long:  "Send a request for reset a server's.",
+		Run:   cmd.runMiddleware.ServerReset,
+	}
+
+	cmd.RootCommand.AddCommand(server)
 	server.AddCommand(serverList, serverDetail, serverStart,
 		serverStop, serverRestart, serverHardstop, serverLoadISO,
 		serverUnloadISO, serverChangeName, serverChangeReverse, ServerAddonsList,

@@ -2,40 +2,40 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	. "titan-sc/api"
 )
 
-var firewall = &cobra.Command{
-	Use:   "firewall",
-	Short: "Manage your networks firewall rules.",
-	Long:  "Manage your networks firewall rules.",
-}
+func (cmd *CMD) FirewallCmdAdd() {
 
-var firewallRulesList = &cobra.Command{
-	Use:     "list --network-uuid NETWORK_UUID",
-	Aliases: []string{"ls"},
-	Short:   "Get all firewall rules.",
-	Long:    "Get all firewall rules of a managed network.",
-	Run:     API.FirewallListRules,
-}
+	firewall := &cobra.Command{
+		Use:   "firewall",
+		Short: "Manage your networks firewall rules.",
+		Long:  "Manage your networks firewall rules.",
+	}
 
-var firewallRulesAdd = &cobra.Command{
-	Use:   "add --network-uuid NETWORK_UUID",
-	Short: "Add a firewall rule.",
-	Long:  "Add a firewall rule to a managed network.",
-	Run:   API.FirewallAddRule,
-}
+	firewallRulesList := &cobra.Command{
+		Use:     "list --network-uuid NETWORK_UUID",
+		Aliases: []string{"ls"},
+		Short:   "Get all firewall rules.",
+		Long:    "Get all firewall rules of a managed network.",
+		Run:     cmd.runMiddleware.FirewallListRules,
+	}
 
-var firewallRulesDel = &cobra.Command{
-	Use:     "delete --network-uuid NETWORK_UUID",
-	Aliases: []string{"del"},
-	Short:   "Delete a firewall rule.",
-	Long:    "Delete a firewall rule from a managed network.",
-	Run:     API.FirewallDelRule,
-}
+	firewallRulesAdd := &cobra.Command{
+		Use:   "add --network-uuid NETWORK_UUID",
+		Short: "Add a firewall rule.",
+		Long:  "Add a firewall rule to a managed network.",
+		Run:   cmd.runMiddleware.FirewallAddRule,
+	}
 
-func firewallCmdAdd() {
-	rootCmd.AddCommand(firewall)
+	firewallRulesDel := &cobra.Command{
+		Use:     "delete --network-uuid NETWORK_UUID",
+		Aliases: []string{"del"},
+		Short:   "Delete a firewall rule.",
+		Long:    "Delete a firewall rule from a managed network.",
+		Run:     cmd.runMiddleware.FirewallDelRule,
+	}
+
+	cmd.RootCommand.AddCommand(firewall)
 	firewall.AddCommand(firewallRulesList, firewallRulesAdd, firewallRulesDel)
 
 	// Firewall list rules
