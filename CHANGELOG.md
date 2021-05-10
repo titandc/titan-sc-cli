@@ -1,6 +1,11 @@
 
 # ChangeLog
 
+## 3.0.1
+
+- Handle snapshots dates as miliseconds timestamps.
+- Format dates as ISO o human output
+
 ## 3.0.0
 
 - Implement 'run' middleware package to fully separate 'api' and 'cmd'

@@ -160,7 +160,7 @@ type APIServerAction struct {
 
 type APISnapshot struct {
 	UUID      string  `json:"uuid"`
-	CreatedAt string  `json:"created_at"`
+	CreatedAt int64   `json:"created_at"`
 	Name      string  `json:"name"`
 	Size      APISize `json:"size"`
 	State     string  `json:"state"`
