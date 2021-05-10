@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"text/tabwriter"
-	"time"
 	"titan-sc/api"
 )
 
@@ -158,7 +157,7 @@ func (run *RunMiddleware) SnapshotRotate(cmd *cobra.Command, args []string) {
 		// Prompt user if needed
 		if !forceRotation {
 			promptString := fmt.Sprint("This action will immediately delete snapshot '", oldestSnapshot.Name,
-				"' (UUID: ", oldestSnapshot.UUID, ") created at ", oldestSnapshot.CreatedAt, ".",
+				"' (UUID: ", oldestSnapshot.UUID, ") created at ", FormatTimestampToString(oldestSnapshot.CreatedAt), ".",
 				" \nAre you sure you want to continue? (y/N): ")
 			lowerText := keyboardPromptToLower(promptString)
 			// If the response is anything other than "yes" or "y"
@@ -201,7 +200,7 @@ func (run *RunMiddleware) SnapshotRotate(cmd *cobra.Command, args []string) {
 
 func printSnapshotInfos(w *tabwriter.Writer, snap *api.APISnapshot) {
 	_, _ = fmt.Fprintf(w, "%s\t%s\t%d %s\t%s\t\n",
-		snap.UUID, snap.CreatedAt, snap.Size.Value,
+		snap.UUID, FormatTimestampToString(snap.CreatedAt), snap.Size.Value,
 		snap.Size.Unit, snap.Name)
 	_ = w.Flush()
 }
@@ -213,20 +212,18 @@ func getOldestSnapshotFromList(snapshots []api.APISnapshot) (api.APISnapshot, er
 	// Because the program cannot unmarshal the time from the snapshot returned by the go-api
 	// into an int64, it must be passed as a string and parsed with time.Parse
 	//oldestDate := millisecondsToTime(snapshots[0].CreatedAt)
-	oldestDate, err := time.Parse(snapshotTimeFormat, snapshots[0].CreatedAt)
-	if err != nil {
-		return api.APISnapshot{}, errors.New("could not parse time")
-	}
+	oldestDate := snapshots[0].CreatedAt
 	oldestSnapshot := snapshots[0]
 	for _, snap := range snapshots {
-		currentDate, err := time.Parse(snapshotTimeFormat, snap.CreatedAt)
-		if err != nil {
-			return api.APISnapshot{}, errors.New("could not parse time")
-		}
-		if currentDate.Before(oldestDate) {
+		currentDate := snap.CreatedAt
+		if currentDate < oldestDate {
 			oldestSnapshot = snap
 			oldestDate = currentDate
 		}
 	}
 	return oldestSnapshot, nil
+}
+
+func FormatTimestampToString(createdAt int64) string {
+	return millisecondsToTime(createdAt).Format(snapshotTimeFormat)
 }

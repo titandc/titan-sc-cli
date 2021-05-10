@@ -15,9 +15,9 @@ const (
 	EnvApiToken    = "TITAN_API_TOKEN"
 	EnvApiUri      = "TITAN_URI"
 	ConfigFileName = "config"
-	VersionMajor   = 1
-	VersionMinor   = 2
-	VersionPatch   = 0
+	VersionMajor   = 3
+	VersionMinor   = 0
+	VersionPatch   = 1
 )
 
 var (

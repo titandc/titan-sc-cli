@@ -82,7 +82,6 @@ func (API *API) SendRequestToAPI(method, path string, httpData interface{}) ([]b
 	return apiResponseBody, nil, nil
 }
 
-
 func handlePotentialDoubleError(apiReturn *APIReturn, err error) error {
 	if err != nil {
 		return err
@@ -92,4 +91,3 @@ func handlePotentialDoubleError(apiReturn *APIReturn, err error) error {
 	}
 	return nil
 }
-
