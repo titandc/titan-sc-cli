@@ -17,7 +17,7 @@ const (
 	ConfigFileName = "config"
 	VersionMajor   = 3
 	VersionMinor   = 0
-	VersionPatch   = 1
+	VersionPatch   = 2
 )
 
 var (

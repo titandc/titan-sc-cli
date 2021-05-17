@@ -1,10 +1,14 @@
 
 # ChangeLog
 
+## 3.0.2
+
+- Add snapshot restore feature with usage example
+
 ## 3.0.1
 
-- Handle snapshots dates as miliseconds timestamps.
-- Format dates as ISO o human output
+- Handle snapshots dates as milliseconds timestamps.
+- Format dates as ISO for human output
 
 ## 3.0.0
 
@@ -86,4 +90,3 @@
 ## 1.0.0
 
 - First version released, based on Titan SC API v1.
-

@@ -47,7 +47,7 @@ func (run *RunMiddleware) SnapshotCreate(cmd *cobra.Command, args []string) {
 	forceErase, _ := cmd.Flags().GetBool("yes-i-agree-to-erase-oldest-snapshot")
 
 	// Execute query
-	snapshot, apiReturn, err := run.API.PostCreateSnapshot(serverUUID)
+	snapshot, apiReturn, err := run.API.CreateSnapshot(serverUUID)
 	if err != nil {
 		run.OutputError(err)
 		return
@@ -87,7 +87,7 @@ func (run *RunMiddleware) SnapshotCreate(cmd *cobra.Command, args []string) {
 		}
 
 		// Create new snapshot
-		snapshot, apiReturn, err = run.API.PostCreateSnapshot(serverUUID)
+		snapshot, apiReturn, err = run.API.CreateSnapshot(serverUUID)
 		if err != nil || apiReturn != nil {
 			run.handleErrorAndGenericOutput(apiReturn, err)
 			return
@@ -127,7 +127,7 @@ func (run *RunMiddleware) SnapshotRotate(cmd *cobra.Command, args []string) {
 	forceRotation, _ := cmd.Flags().GetBool("force")
 
 	// Try to create a snapshot
-	snapshot, apiReturn, err := run.API.PostCreateSnapshot(serverUUID)
+	snapshot, apiReturn, err := run.API.CreateSnapshot(serverUUID)
 	if err != nil {
 		run.OutputError(err)
 		return
@@ -180,7 +180,7 @@ func (run *RunMiddleware) SnapshotRotate(cmd *cobra.Command, args []string) {
 		}
 
 		// Create new snapshot
-		snapshot, apiReturn, err = run.API.PostCreateSnapshot(serverUUID)
+		snapshot, apiReturn, err = run.API.CreateSnapshot(serverUUID)
 		if err != nil || apiReturn != nil {
 			run.handleErrorAndGenericOutput(apiReturn, err)
 			return
@@ -196,6 +196,20 @@ func (run *RunMiddleware) SnapshotRotate(cmd *cobra.Command, args []string) {
 		return
 	}
 	printAsJson(snapshot)
+}
+
+func (run *RunMiddleware) SnapshotRestore(cmd *cobra.Command, args []string) {
+	// Parse falgs
+	_ = args
+	run.ParseGlobalFlags(cmd)
+	serverUUID, _ := cmd.Flags().GetString("server-uuid")
+	snapUUID, _ := cmd.Flags().GetString("snapshot-uuid")
+
+	// Execute query
+	apiReturn, err := run.API.RestoreSnapshot(serverUUID, snapUUID)
+
+	// Format output
+	run.handleErrorAndGenericOutput(apiReturn, err)
 }
 
 func printSnapshotInfos(w *tabwriter.Writer, snap *api.APISnapshot) {

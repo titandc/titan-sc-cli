@@ -312,21 +312,33 @@ titan-sc [command] --human
 
 ### Examples
 
-List all your servers:
+* List all your servers:
 
 ```
 titan-sc server list
 ```
 
-Start all stopped servers (one-liner with `jq` and `xargs`):
+* Start all stopped servers (one-liner with `jq` and `xargs`):
 
 ```
 titan-sc srv ls | jq '.[] | select(.state == "stopped") | .uuid' | xargs -L1 titan-sc srv start
 ```
 
-Force create a new snapshot for your server:
+* Force create a new snapshot for your server:
+
 ```
 titan-sc snapshot create --server-uuid ${SERVER_UUID} --yes-i-agree-to-erase-oldest-snapshot
 ```
 
 *where `${SERVER_UUID}` is the UUID of the targeted server. The last option may be used to automatically erase oldest server's snapshot when quota has been reached.*
+
+* Restore a snapshot:
+
+```
+titan-sc snapshot restore --server-uuid ${SERVER_UUID} --snapshot-uuid ${SNAPSHOT_UUID}
+```
+
+*where `${SERVER_UUID}` is the UUID of the targeted server and `${SNAPSHOT_UUID}` is the UUID of the snapshot to restore.
+The targeted server must be stopped before starting the restoration. Running this command will **erase all data** of your
+ server's disk to replace it by the content of the snapshot. It is therefore highly recommended to create a fresh snapshot
+ before restoring an old one in order to be able to rollback the operation.*
