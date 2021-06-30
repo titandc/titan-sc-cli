@@ -1,6 +1,10 @@
 
 # ChangeLog
 
+## 3.0.3
+
+ - load more informations from servers' company.
+
 ## 3.0.2
 
 - Add snapshot restore feature with usage example

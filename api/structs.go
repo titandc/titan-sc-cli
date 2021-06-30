@@ -43,8 +43,13 @@ type APIServer struct {
 		IP   string `json:"ip"`
 		Type int64  `json:"type"`
 	} `json:"ips"`
-	IPv6         string `json:"ipv6"`
-	CompanyName  string `json:"company"`
+	IPv6    string `json:"ipv6"`
+	Company struct {
+		UUID        string `json:"uuid"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Disabled    bool   `json:"disabled"`
+	} `json:"company"`
 	CreationDate int64  `json:"creation_date"`
 	Notes        string `json:"notes"`
 	Bandwidth    struct {

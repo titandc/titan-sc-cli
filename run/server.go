@@ -53,7 +53,7 @@ func (run *RunMiddleware) ServerList(cmd *cobra.Command, args []string) {
 		for _, server := range servers {
 			state := serverStateSetColor(run.Color, server.State)
 			_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%t\t\n",
-				server.CompanyName, server.UUID, server.Plan, state, server.Template,
+				server.Company.Name, server.UUID, server.Plan, state, server.Template,
 				server.Name, server.Managed)
 		}
 		_ = w.Flush()
@@ -91,7 +91,7 @@ func (run *RunMiddleware) printServerDetail(server *api.APIServer) {
 		"IP Kvm: %s\n",
 		server.Name, server.UUID, date, server.Login, server.State,
 		server.Plan, server.Template,
-		server.CompanyName, server.Hypervisor.Hostname, server.KvmIp.Status)
+		server.Company.Name, server.Hypervisor.Hostname, server.KvmIp.Status)
 
 	if server.KvmIp.Status == "started" && server.KvmIp.URI != "" {
 		fmt.Println("IP Kvm URI:", server.KvmIp.URI)
