@@ -12,7 +12,7 @@ architecture.
 
 #### Dependencies
 
-Golang v1.14 or above is required, follow the [official documentation](https://golang.org/doc/install) to install it on
+Golang v1.16 or above is required, follow the [official documentation](https://golang.org/doc/install) to install it on
 your system. The project uses go vendoring mode (aka. vgo) for dependencies management.
 
 #### Instructions

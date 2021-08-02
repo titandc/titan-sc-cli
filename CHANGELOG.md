@@ -1,6 +1,11 @@
 
 # ChangeLog
 
+## 3.0.4
+
+ - upgrade go to version 1.16
+ - update dependencies
+
 ## 3.0.3
 
  - load more informations from servers' company.
