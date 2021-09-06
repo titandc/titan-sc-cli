@@ -3,6 +3,7 @@ package run
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"net"
 	"os"
 	"text/tabwriter"
 	"titan-sc/api"
@@ -14,11 +15,16 @@ func (run *RunMiddleware) IPAttach(cmd *cobra.Command, args []string) {
 	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 	ip, _ := cmd.Flags().GetString("ip")
 
-	ipOpt := []api.APIIPAttachDetach{{
-		IP:      ip,
-		Version: 4,
-	}}
-	apiReturn, err := run.API.PostIPAttach(serverUUID, ipOpt)
+	parsedIP := net.ParseIP(ip)
+	ipOpt := api.APIIPAttachDetach{
+		IP: parsedIP.String(),
+	}
+	if parsedIP.To4() == nil {
+		ipOpt.Version = 6
+	} else {
+		ipOpt.Version = 4
+	}
+	apiReturn, err := run.API.PostIPAttach(serverUUID, []api.APIIPAttachDetach{ipOpt})
 	run.handleErrorAndGenericOutput(apiReturn, err)
 }
 
@@ -28,9 +34,14 @@ func (run *RunMiddleware) IPDetach(cmd *cobra.Command, args []string) {
 	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 	ip, _ := cmd.Flags().GetString("ip")
 
+	parsedIP := net.ParseIP(ip)
 	ipOpt := api.APIIPAttachDetach{
-		IP:      ip,
-		Version: 4,
+		IP: parsedIP.String(),
+	}
+	if parsedIP.To4() == nil {
+		ipOpt.Version = 6
+	} else {
+		ipOpt.Version = 4
 	}
 	apiReturn, err := run.API.DeleteIPDetach(serverUUID, ipOpt)
 	run.handleErrorAndGenericOutput(apiReturn, err)

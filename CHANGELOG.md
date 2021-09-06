@@ -1,6 +1,10 @@
 
 # ChangeLog
 
+## 3.0.5
+
+ - implement IPv6 for attach/detach commands
+
 ## 3.0.4
 
  - upgrade go to version 1.16
