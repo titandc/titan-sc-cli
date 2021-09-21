@@ -1,6 +1,10 @@
 
 # ChangeLog
 
+## 3.0.6
+
+ - update authentication struct for compatibility with API 2.1.4
+
 ## 3.0.5
 
  - implement IPv6 for attach/detach commands

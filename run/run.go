@@ -11,6 +11,15 @@ import (
 	"titan-sc/api"
 )
 
+// State List
+const (
+	StateCreating = "creating"
+	StateCreated = "created"
+	StateDeleted = "deleted"
+	StateStarted = "started"
+	StateStopped = "stopped"
+)
+
 type RunMiddleware struct {
 	HumanReadable bool
 	Color         bool
@@ -112,18 +121,22 @@ func keyboardPromptToLower(promptString string) string {
 	return lowerText
 }
 
-func serverStateSetColor(color bool, state string) string {
+func GetStateColorized(color bool, state string) string {
 	if !color {
 		return state
 	}
 
 	colorState := state
-	switch state {
-	case "deleted":
-		colorState = "\033[1;31m" + state + "\033[0m"
-	case "started":
+	switch strings.ToLower(state) {
+	case StateCreating:
+		colorState = "\033[1;96m" + state + "\033[0m"
+	case StateCreated:
 		colorState = "\033[1;32m" + state + "\033[0m"
-	case "stopped":
+	case StateDeleted:
+		colorState = "\033[1;31m" + state + "\033[0m"
+	case StateStarted:
+		colorState = "\033[1;32m" + state + "\033[0m"
+	case StateStopped:
 		colorState = "\033[1;33m" + state + "\033[0m"
 	}
 	return colorState

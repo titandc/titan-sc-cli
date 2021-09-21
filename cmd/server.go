@@ -133,10 +133,23 @@ func (cmd *CMD) ServerCmdAdd() {
 	}
 
 	cmd.RootCommand.AddCommand(server)
-	server.AddCommand(serverList, serverDetail, serverStart,
-		serverStop, serverRestart, serverHardstop, serverLoadISO,
-		serverUnloadISO, serverChangeName, serverChangeReverse, ServerAddonsList,
-		serverGetTemplateList, serverCreate, serverDelete, serverReset)
+	server.AddCommand(serverList,
+		serverDetail,
+		serverStart,
+		serverStop,
+		serverRestart,
+		serverHardstop,
+		serverLoadISO,
+		serverUnloadISO,
+		serverChangeName,
+		serverChangeReverse,
+		ServerAddonsList,
+		serverGetTemplateList,
+		serverCreate,
+		serverDelete,
+		serverReset)
+
+	// Command arguments
 	serverList.Flags().StringP("company-uuid", "c", "", "Set company UUID.")
 
 	serverDetail.Flags().StringP("server-uuid", "s", "", "Set server UUID.")
@@ -174,8 +187,8 @@ func (cmd *CMD) ServerCmdAdd() {
 
 	// Server create
 	serverCreate.Flags().StringP("plan", "p", "", "Choose your server plan.")
-	serverCreate.Flags().StringP("os", "", "", "Set you OS name.")
-	serverCreate.Flags().StringP("os-version", "", "", "Set your os version.")
+	serverCreate.Flags().StringP("template-uuid", "", "", "Set template used for create server.")
+	serverCreate.Flags().StringP("image-uuid", "", "", "Set image UUID used for create server.")
 	serverCreate.Flags().StringP("login", "", "", "Set login.")
 	serverCreate.Flags().StringP("password", "", "", "Set password for login.")
 	serverCreate.Flags().StringP("network-uuid", "", "", "Set network UUID for managed network.")
@@ -183,17 +196,15 @@ func (cmd *CMD) ServerCmdAdd() {
 	serverCreate.Flags().IntP("cpu-addon", "c", 0, "Number CPU addons.")
 	serverCreate.Flags().IntP("ram-addon", "r", 0, "Number  RAM size (GB) addons.")
 	serverCreate.Flags().IntP("disk-addon", "d", 0, "Number Disk size (GB) addons.")
-	serverCreate.Flags().StringP("ssh-keys-name", "", "", "Set ssh keys: keyname1,keyname2,...,keynameX.")
+	serverCreate.Flags().StringP("ssh-keys-name", "", "", "Set ssh keys: keyname1,keyname2,...,keynameN.")
 	_ = serverCreate.MarkFlagRequired("plan")
-	_ = serverCreate.MarkFlagRequired("os")
-	_ = serverCreate.MarkFlagRequired("os-version")
 
 	// server reset
 	serverReset.Flags().StringP("server-uuid", "s", "", "Set server UUID.")
-	serverReset.Flags().StringP("os", "", "", "Set you OS name.")
-	serverReset.Flags().StringP("os-version", "", "", "Set your os version.")
+	serverReset.Flags().StringP("template-uuid", "", "", "Set template used for create server.")
+	serverReset.Flags().StringP("image-uuid", "", "", "Set image UUID used for create server.")
 	serverReset.Flags().StringP("password", "", "", "Set password for login.")
-	serverReset.Flags().StringP("ssh-keys-name", "", "", "Set ssh keys: keyname1,keyname2,...,keynameX.")
+	serverReset.Flags().StringP("ssh-keys-name", "", "", "Set ssh keys: keyname1,keyname2,...,keynameN.")
 	_ = serverReset.MarkFlagRequired("os")
 	_ = serverReset.MarkFlagRequired("os-version")
 	_ = serverReset.MarkFlagRequired("server-uuid")

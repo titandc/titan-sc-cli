@@ -73,7 +73,7 @@ func (API *API) ServerStateAction(state, serverUUID string) (*APIReturn, error) 
 }
 
 func (API *API) ServerLoadISO(uriISO, serverUUID string) (*APIReturn, error) {
-	reqStruct := &APIServerLOadISORequest{
+	reqStruct := &APIServerLoadISORequest{
 		Protocol: "https",
 		ISO:      uriISO,
 	}

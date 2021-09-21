@@ -25,12 +25,15 @@ type APISize struct {
 }
 
 type APIServer struct {
-	UUID       string `json:"uuid"`
-	Login      string `json:"user_login"`
-	Name       string `json:"Name"`
-	Plan       string `json:"plan"`
-	State      string `json:"state"`
-	Template   string `json:"template"`
+	UUID       string                 `json:"uuid"`
+	Name       string                 `json:"Name"`
+	Plan       string                 `json:"plan"`
+	State      string                 `json:"state"`
+	Template   APIServerTemplateInfos `json:"template_full"`
+	Image      *APIServerImageInfos   `json:"image_full"`
+	Disksource APIServerDiskSource    `json:"disk_source"`
+	SSHKeys    []string               `json:"ssh_keys"`
+	Login      string                 `json:"user_login"`
 	Hypervisor struct {
 		UUID     string `json:"uuid"`
 		Hostname string `json:"hostname"`
@@ -81,6 +84,36 @@ type APIServer struct {
 	ManagedNetwork string   `json:"managed_network"`
 	Managed        bool     `json:"managed"`
 	Notifications  []string `json:"notifications"`
+}
+
+type APIServerDiskSource struct {
+	Type string `json:"type"`
+	UUID string `json:"uuid"`
+}
+
+type APIServerTemplateInfos struct {
+	UUID    string `form:"uuid" json:"uuid"`
+	Type    string `form:"type" json:"type"`
+	OS      string `form:"os" json:"os"`
+	Version string `form:"version" json:"version"`
+}
+
+type APIServerImageInfos struct {
+	UUID         string              `form:"uuid" json:"uuid"`
+	Name         string              `form:"name" json:"name"`
+	State        string              `form:"state" json:"state"`
+	CompanyUUID  string              `form:"company_uuid" json:"company_uuid"`
+	Owner        string              `form:"owner" json:"owner"` // is User uuid
+	CreatedAt    int64               `form:"created_at" json:"created_at"`
+	DiskSize     APISize             `form:"disk_size" json:"disk_size"`
+	TemplateUUID string              `form:"template_uuid" json:"template_uuid"`
+	OS           APIImageOSFullInfos `form:"os" json:"os"`
+}
+
+type APIImageOSFullInfos struct {
+	Type    string `form:"type" json:"type"`
+	Name    string `form:"name" json:"name"`
+	Version string `form:"version" json:"version"`
 }
 
 type APIServerUpdateInfos struct {
@@ -263,7 +296,7 @@ type APICompanyDetail struct {
 	Managed   bool   `json:"managed_services"`
 }
 
-type APIServerLOadISORequest struct {
+type APIServerLoadISORequest struct {
 	ISO      string `json:"iso"`
 	Protocol string `json:"protocol"`
 }
@@ -362,16 +395,19 @@ type APIDeleteUserSSHKey struct {
 }
 
 type CreateServersDetail struct {
-	Username        string                  `json:"username"`
-	Quantity        int64                   `json:"quantity"`
-	UserPassword    string                  `json:"user_password,omitempty"`
-	UserLogin       string                  `json:"user_login,omitempty"`
-	UserSSHKeys     []string                `json:"user_ssh_keys,omitempty"`
-	TemplateOS      string                  `json:"template_os"`
-	TemplateVersion string                  `json:"template_version"`
-	Plan            string                  `json:"plan"`
-	Addons          []APIInstallAddonsAddon `json:"addons,omitempty"`
-	ManagedNetwork  string                  `json:"managed_network,omitempty"`
+	Username       string                  `json:"username"`
+	Quantity       int64                   `json:"quantity"`
+	Auth           APIServerAuth           `json:"authentication"`
+	DiskSource     APIServerDiskSource     `json:"disk_source"`
+	Plan           string                  `json:"plan"`
+	Addons         []APIInstallAddonsAddon `json:"addons,omitempty"`
+	ManagedNetwork string                  `json:"managed_network,omitempty"`
+}
+
+type APIServerAuth struct {
+	UserLogin    string   `json:"user_login,omitempty"`
+	UserPassword string   `json:"user_password,omitempty"`
+	SSHKeys      []string `json:"user_ssh_keys,omitempty"`
 }
 
 type APICreateServers struct {
@@ -415,10 +451,9 @@ type APITemplateFullInfosVersion struct {
 }
 
 type APIResetServer struct {
-	UserPassword    string   `json:"user_password,omitempty"`
-	UserSSHKeys     []string `json:"user_ssh_keys,omitempty"`
-	TemplateOS      string   `json:"template_os"`
-	TemplateVersion string   `json:"template_version"`
+	UserPassword string              `json:"user_password,omitempty"`
+	UserSSHKeys  []string            `json:"user_ssh_keys,omitempty"`
+	DiskSource   APIServerDiskSource `json:"disk_source"`
 }
 
 type IsAdminStruct struct {

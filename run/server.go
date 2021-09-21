@@ -12,6 +12,10 @@ import (
 
 const (
 	deleteServerReasonCLI = "cli"
+
+	// Disk source type
+	DiskSourceTemplate = "template"
+	DiskSourceImage    = "image"
 )
 
 func (run *RunMiddleware) ServerChangeName(cmd *cobra.Command, args []string) {
@@ -51,9 +55,16 @@ func (run *RunMiddleware) ServerList(cmd *cobra.Command, args []string) {
 		_, _ = fmt.Fprintf(w, "COMPANY\tUUID\tPLAN\tSTATE\tOS\tNAME\tMANAGED\t\n")
 
 		for _, server := range servers {
-			state := serverStateSetColor(run.Color, server.State)
+			var osInfos string
+			state := GetStateColorized(run.Color, server.State)
+
+			if server.Disksource.Type == DiskSourceTemplate {
+				osInfos = fmt.Sprintf("%s %s", server.Template.OS, server.Template.Version)
+			} else {
+				osInfos = fmt.Sprintf("%s %s", server.Image.OS.Name, server.Image.OS.Version)
+			}
 			_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%t\t\n",
-				server.Company.Name, server.UUID, server.Plan, state, server.Template,
+				server.Company.Name, server.UUID, server.Plan, state, osInfos,
 				server.Name, server.Managed)
 		}
 		_ = w.Flush()
@@ -78,7 +89,15 @@ func (run *RunMiddleware) ServerDetail(cmd *cobra.Command, args []string) {
 }
 
 func (run *RunMiddleware) printServerDetail(server *api.APIServer) {
+	var osInfos string
 	date := run.DateFormat(server.CreationDate)
+
+	if server.Disksource.Type == DiskSourceTemplate {
+		osInfos = fmt.Sprintf("%s %s", server.Template.OS, server.Template.Version)
+	} else {
+		osInfos = fmt.Sprintf("%s %s", server.Image.OS.Name, server.Image.OS.Version)
+	}
+
 	fmt.Printf("Name: %s\n"+
 		"UUID: %s\n"+
 		"Created at: %s\n"+
@@ -90,8 +109,8 @@ func (run *RunMiddleware) printServerDetail(server *api.APIServer) {
 		"Hypervisor: %s\n"+
 		"IP Kvm: %s\n",
 		server.Name, server.UUID, date, server.Login, server.State,
-		server.Plan, server.Template,
-		server.Company.Name, server.Hypervisor.Hostname, server.KvmIp.Status)
+		server.Plan, osInfos, server.Company.Name,
+		server.Hypervisor.Hostname, server.KvmIp.Status)
 
 	if server.KvmIp.Status == "started" && server.KvmIp.URI != "" {
 		fmt.Println("IP Kvm URI:", server.KvmIp.URI)
@@ -238,26 +257,35 @@ func (run *RunMiddleware) ServerDelete(cmd *cobra.Command, args []string) {
 func (run *RunMiddleware) ServerReset(cmd *cobra.Command, args []string) {
 	_ = args
 	run.ParseGlobalFlags(cmd)
-	serverUUID, _ := cmd.Flags().GetString("server-uuid")
+	serverReset := new(api.APIResetServer)
 
-	serverReset := &api.APIResetServer{}
+	serverUUID, _ := cmd.Flags().GetString("server-uuid")
 	sshKeys, _ := cmd.Flags().GetString("ssh-keys-name")
 	serverReset.UserPassword, _ = cmd.Flags().GetString("password")
-	serverReset.TemplateOS, _ = cmd.Flags().GetString("os")
-	serverReset.TemplateVersion, _ = cmd.Flags().GetString("os-version")
+	templateUUID, _ := cmd.Flags().GetString("template-uuid")
+	imageUUID, _ := cmd.Flags().GetString("image-uuid")
 
-	if sshKeys != "" {
-		var err error
-		serverReset.UserSSHKeys, err = run.serverSearchSSHKeys(sshKeys)
-		if err != nil {
-			return
-		}
+	err := run.serverSetDiskSource(&serverReset.DiskSource, imageUUID, templateUUID)
+	if err != nil {
+		run.OutputError(err)
+		return
 	}
+
+	serverReset.UserSSHKeys, err = run.serverSearchSSHKeys(sshKeys)
+	if err != nil {
+		run.OutputError(err)
+		return
+	}
+
 	apiReturn, err := run.API.ServerReset(serverUUID, serverReset)
 	run.handleErrorAndGenericOutput(apiReturn, err)
 }
 
 func (run *RunMiddleware) serverSearchSSHKeys(sshKeysName string) ([]string, error) {
+	if sshKeysName != "" {
+		return []string{}, nil
+	}
+
 	sshKeysList, err := run.API.GetSSHKeyList()
 	if err != nil {
 		return []string{}, err
@@ -282,69 +310,76 @@ func (run *RunMiddleware) serverSearchSSHKeys(sshKeysName string) ([]string, err
 func (run *RunMiddleware) ServerCreate(cmd *cobra.Command, args []string) {
 	_ = args
 	run.ParseGlobalFlags(cmd)
+	requestAddons := map[string]int{}
 
 	server := &api.APICreateServers{
 		CreateServersDetail: make([]api.CreateServersDetail, 1),
 	}
 
+	templateUUID, _ := cmd.Flags().GetString("template-uuid")
+	imageUUID, _ := cmd.Flags().GetString("image-uuid")
 	sshKeys, _ := cmd.Flags().GetString("ssh-keys-name")
 	server.CreateServersDetail[0].Quantity, _ = cmd.Flags().GetInt64("quantity")
-	server.CreateServersDetail[0].UserPassword, _ = cmd.Flags().GetString("password")
-	server.CreateServersDetail[0].UserLogin, _ = cmd.Flags().GetString("login")
-	server.CreateServersDetail[0].TemplateOS, _ = cmd.Flags().GetString("os")
-	server.CreateServersDetail[0].TemplateVersion, _ = cmd.Flags().GetString("os-version")
+	server.CreateServersDetail[0].Auth.UserPassword, _ = cmd.Flags().GetString("password")
+	server.CreateServersDetail[0].Auth.UserLogin, _ = cmd.Flags().GetString("login")
 	server.CreateServersDetail[0].ManagedNetwork, _ = cmd.Flags().GetString("network-uuid")
 	server.CreateServersDetail[0].Plan, _ = cmd.Flags().GetString("plan")
-	CpuAddonsNumber, _ := cmd.Flags().GetInt("cpu-addon")
-	RamAddonsNumber, _ := cmd.Flags().GetInt("ram-addon")
-	DiskAddonsNumber, _ := cmd.Flags().GetInt("disk-addon")
+	// Parse Addons
+	requestAddons["cpu"], _ = cmd.Flags().GetInt("cpu-addon")
+	requestAddons["ram"], _ = cmd.Flags().GetInt("ram-addon")
+	requestAddons["disk"], _ = cmd.Flags().GetInt("disk-addon")
 
 	server.CreateServersDetail[0].Plan = strings.ToUpper(server.CreateServersDetail[0].Plan)
-	server.CreateServersDetail[0].TemplateOS = strings.ToTitle(server.CreateServersDetail[0].TemplateOS)
-
-	var allAddons []api.APIInstallAddonsAddon
-	if DiskAddonsNumber > 0 || RamAddonsNumber > 0 || CpuAddonsNumber > 0 {
-		addons, err := run.GetAllAddons()
-		if err != nil {
-			return
-		}
-
-		if DiskAddonsNumber > 0 {
-			if err := run.ServerCreateAddAddonInArray(addons, &allAddons, DiskAddonsNumber, "disk"); err != nil {
-				run.OutputError(err)
-				return
-			}
-		}
-		if RamAddonsNumber > 0 {
-			if err := run.ServerCreateAddAddonInArray(addons, &allAddons, RamAddonsNumber, "ram"); err != nil {
-				run.OutputError(err)
-				return
-			}
-		}
-		if CpuAddonsNumber > 0 {
-			if err := run.ServerCreateAddAddonInArray(addons, &allAddons, CpuAddonsNumber, "cpu"); err != nil {
-				run.OutputError(err)
-				return
-			}
-		}
+	err := run.serverSetDiskSource(&server.CreateServersDetail[0].DiskSource, imageUUID, templateUUID)
+	if err != nil {
+		run.OutputError(err)
+		return
 	}
-	server.CreateServersDetail[0].Addons = allAddons
 
-	if sshKeys != "" {
-		var err error
-		server.CreateServersDetail[0].UserSSHKeys, err = run.serverSearchSSHKeys(sshKeys)
-		if err != nil {
-			run.OutputError(errors.New("Fail to get ssh keys."))
-			return
-		}
+	server.CreateServersDetail[0].Addons, err = run.serverCreateSetAddons(requestAddons)
+	if err != nil {
+		return
+	}
+
+	server.CreateServersDetail[0].Auth.SSHKeys, err = run.serverSearchSSHKeys(sshKeys)
+	if err != nil {
+		run.OutputError(err)
+		return
 	}
 
 	apiReturn, err := run.API.ServerCreate(server)
 	run.handleErrorAndGenericOutput(apiReturn, err)
 }
 
+func (run *RunMiddleware) serverCreateSetAddons(requestAddons map[string]int) ([]api.APIInstallAddonsAddon, error) {
+	var allAddons []api.APIInstallAddonsAddon
+
+	if createServerWithAddons(requestAddons) {
+		addons, err := run.GetAllAddons()
+		if err != nil {
+			return nil, err
+		}
+
+		for key, value := range requestAddons {
+			if value > 0 {
+				if err = run.ServerCreateAddAddonInArray(addons, &allAddons, value, key); err != nil {
+					run.OutputError(err)
+					return nil, err
+				}
+			}
+		}
+	}
+	return allAddons, nil
+}
+
+func createServerWithAddons(addons map[string]int) bool {
+	return addons["cpu"] > 0 || addons["ram"] > 0 || addons["disk"] > 0
+}
+
 func (run *RunMiddleware) ServerCreateAddAddonInArray(addonsList []api.APIAddonsItem,
-	allAddons *[]api.APIInstallAddonsAddon, addonNumber int, addonName string) error {
+	allAddons *[]api.APIInstallAddonsAddon,
+	addonNumber int,
+	addonName string) error {
 	addonUUID, err := run.AddonGetUUIDByName(addonsList, addonName)
 	if err != nil {
 		run.OutputError(err)
@@ -355,5 +390,23 @@ func (run *RunMiddleware) ServerCreateAddAddonInArray(addonsList []api.APIAddons
 		Quantity: int64(addonNumber),
 	}
 	*allAddons = append(*allAddons, *addonItem)
+	return nil
+}
+
+func (run *RunMiddleware) serverSetDiskSource(diskSrc *api.APIServerDiskSource,
+	imageUUID, templateUUID string) error {
+
+	if imageUUID != "" && templateUUID != "" {
+		return errors.New("Disk source conflict.\n")
+	}
+
+	if templateUUID != "" {
+		diskSrc.Type = DiskSourceTemplate
+		diskSrc.UUID = templateUUID
+	} else {
+		// is type image
+		diskSrc.Type = DiskSourceImage
+		diskSrc.UUID = imageUUID
+	}
 	return nil
 }
