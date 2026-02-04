@@ -20,6 +20,8 @@ const (
 	SnapshotCreateErrorLimitExceeded = "SNAPSHOT_CREATE_FAIL_LIMIT_EXCEEDED"
 )
 
+// DeleteSnapshot removes a snapshot from a server.
+// DELETE /compute/servers/{server_uuid}/snapshots/{snapshot_uuid}
 func (API *API) DeleteSnapshot(serverUUID, snapUUID string) (*APIReturn, error) {
 	// Send request
 	rawData, apiReturn, err := API.SendRequestToAPI(HTTPDelete, "/compute/servers/"+
@@ -37,6 +39,8 @@ func (API *API) DeleteSnapshot(serverUUID, snapUUID string) (*APIReturn, error) 
 	return apiReturn, nil
 }
 
+// ListSnapshots retrieves all snapshots for a server.
+// GET /compute/servers/{server_uuid}/snapshots
 func (API *API) ListSnapshots(serverUUID string) ([]APISnapshot, *APIReturn, error) {
 	// Send request
 	rawData, apiReturn, err := API.SendRequestToAPI(HTTPGet, "/compute/servers/"+serverUUID+"/snapshots", nil)
@@ -60,6 +64,8 @@ func (API *API) ListSnapshots(serverUUID string) ([]APISnapshot, *APIReturn, err
 	return snapshots, nil, nil
 }
 
+// CreateSnapshot creates a new snapshot for a server.
+// POST /compute/servers/{server_uuid}/snapshots
 func (API *API) CreateSnapshot(serverUUID string) (*APISnapshot, *APIReturn, error) {
 	rawData, apiReturn, err := API.SendRequestToAPI(HTTPPost, "/compute/servers/"+serverUUID+"/snapshots", nil)
 
@@ -80,21 +86,4 @@ func (API *API) CreateSnapshot(serverUUID string) (*APISnapshot, *APIReturn, err
 		return nil, nil, err
 	}
 	return &snapshot, nil, nil
-}
-
-func (API *API) RestoreSnapshot(serverUUID, snapshotUUID string) (*APIReturn, error) {
-	// Send request
-	rawData, apiReturn, err := API.SendRequestToAPI(HTTPPut, "/compute/servers/"+
-		serverUUID+"/snapshots/"+snapshotUUID+"/restore", nil)
-
-	// Communication error
-	if err != nil {
-		return nil, err
-	}
-
-	// Unmarshal error
-	if apiReturn == nil {
-		return nil, errors.New(string(rawData))
-	}
-	return apiReturn, nil
 }

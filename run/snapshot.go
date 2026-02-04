@@ -3,10 +3,11 @@ package run
 import (
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 	"text/tabwriter"
 	"titan-sc/api"
+
+	"github.com/spf13/cobra"
 )
 
 const snapshotTimeFormat = "2006-01-02T15:04:05-07:00"
@@ -198,20 +199,6 @@ func (run *RunMiddleware) SnapshotRotate(cmd *cobra.Command, args []string) {
 	printAsJson(snapshot)
 }
 
-func (run *RunMiddleware) SnapshotRestore(cmd *cobra.Command, args []string) {
-	// Parse falgs
-	_ = args
-	run.ParseGlobalFlags(cmd)
-	serverUUID, _ := cmd.Flags().GetString("server-uuid")
-	snapUUID, _ := cmd.Flags().GetString("snapshot-uuid")
-
-	// Execute query
-	apiReturn, err := run.API.RestoreSnapshot(serverUUID, snapUUID)
-
-	// Format output
-	run.handleErrorAndGenericOutput(apiReturn, err)
-}
-
 func printSnapshotInfos(w *tabwriter.Writer, snap *api.APISnapshot) {
 	_, _ = fmt.Fprintf(w, "%s\t%s\t%d %s\t%s\t\n",
 		snap.UUID, FormatTimestampToString(snap.CreatedAt), snap.Size.Value,
@@ -223,9 +210,6 @@ func getOldestSnapshotFromList(snapshots []api.APISnapshot) (api.APISnapshot, er
 	if len(snapshots) == 0 {
 		return api.APISnapshot{}, errors.New("empty snapshot list")
 	}
-	// Because the program cannot unmarshal the time from the snapshot returned by the go-api
-	// into an int64, it must be passed as a string and parsed with time.Parse
-	//oldestDate := millisecondsToTime(snapshots[0].CreatedAt)
 	oldestDate := snapshots[0].CreatedAt
 	oldestSnapshot := snapshots[0]
 	for _, snap := range snapshots {

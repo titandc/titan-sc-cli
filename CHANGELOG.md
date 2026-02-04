@@ -1,6 +1,14 @@
 
 # ChangeLog
 
+## 3.0.7
+
+- Code cleanup for Titan SmallCloud v1 API
+- Remove deprecated features no longer supported by the API
+- Keep only server list/detail and snapshot management commands
+- Update dependencies (Go 1.23, cobra 1.8.1, viper 1.19.0)
+- Note: v2 API support is under preparation
+
 ## 3.0.6
 
  - update authentication struct for compatibility with API 2.1.4

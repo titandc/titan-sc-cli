@@ -42,15 +42,8 @@ func (cmd *CMD) SnapshotCmdAdd() {
 		Run:   cmd.runMiddleware.SnapshotRotate,
 	}
 
-	snapshotRestore := &cobra.Command{
-		Use:   "restore --server-uuid SERVER_UUID --snapshot-uuid SNAPSHOT_UUID",
-		Short: "Restore a server snapshot",
-		Long:  "Restore a server snapshot",
-		Run:   cmd.runMiddleware.SnapshotRestore,
-	}
-
 	cmd.RootCommand.AddCommand(snapshot)
-	snapshot.AddCommand(snapshotList, snapshotCreate, snapshotDelete, snapshotRotate, snapshotRestore)
+	snapshot.AddCommand(snapshotList, snapshotCreate, snapshotDelete, snapshotRotate)
 
 	snapshotDelete.Flags().StringP("server-uuid", "u", "", "Set server UUID.")
 	snapshotDelete.Flags().StringP("snapshot-uuid", "s", "", "Set snapshot UUID.")
@@ -70,9 +63,4 @@ func (cmd *CMD) SnapshotCmdAdd() {
 	snapshotRotate.Flags().BoolP("force", "f", false, "Force the rotation. "+
 		"The oldest snapshot will be automatically deleted without prompting.")
 	_ = snapshotRotate.MarkFlagRequired("server-uuid")
-
-	snapshotRestore.Flags().StringP("server-uuid", "u", "", "Set server UUID.")
-	snapshotRestore.Flags().StringP("snapshot-uuid", "s", "", "Set snapshot UUID.")
-	_ = snapshotRestore.MarkFlagRequired("server-uuid")
-	_ = snapshotRestore.MarkFlagRequired("snapshot-uuid")
 }

@@ -1,7 +1,22 @@
-# **Titan Small Cloud CLI**
+# **Titan Small Cloud CLI** (v3.x - Legacy)
 
-A user friendly command line interface written in go allowing to manage resources hosted
-on [Titan Small Cloud (SC)](https://sc.titandc.net).
+> ⚠️ **Deprecation Notice**
+>
+> This CLI version (v3.x) is based on the **Titan SmallCloud API v1**, which is now **deprecated**.
+> It will remain functional with limited features for a transitional period, but **no new features will be added**.
+>
+> **Users are encouraged to migrate to the new CLI v4.x**, which fully supports the **API v2** and offers
+> a comprehensive set of features for managing your Titan SmallCloud resources.
+>
+> 👉 [Download the new CLI v4.x](https://github.com/titandc/titan-sc-cli/releases)
+
+---
+
+A minimal command line interface written in Go for basic operations on [Titan Small Cloud (SC)](https://sc.titandc.net).
+
+**Supported features (v1 API):**
+- List and view server details
+- Manage server snapshots (list, create, delete, rotate)
 
 ## Installation
 
@@ -12,16 +27,15 @@ architecture.
 
 #### Dependencies
 
-Golang v1.16 or above is required, follow the [official documentation](https://golang.org/doc/install) to install it on
-your system. The project uses go vendoring mode (aka. vgo) for dependencies management.
+Golang v1.23 or above is required, follow the [official documentation](https://golang.org/doc/install) to install it on
+your system.
 
 #### Instructions
 
 ```shell script
 git clone https://github.com/titandc/titan-sc-cli.git
 cd titan-sc-cli
-go mod vendor
-go build -mod vendor
+go build .
 ./titan-sc -h
 ```
 
@@ -182,75 +196,6 @@ Generate the completion file:
 titan-sc completion powershell > completion_file
 ```
 
-## Command-line completion
-
-Command-line completion for commands and options are supported with the following shells:
-
-- Bash
-- Zsh
-- Fish
-- Powershell
-
-### Bash
-
-First make sure to have the package `bash-completion` installed on your system.
-
-```shell script
-source <(titan-sc completion bash)
-```
-
-To load completions for each session, execute once:
-
-##### Linux:
-
-```shell script
-titan-sc completion bash > /etc/bash_completion.d/titan-sc
-```
-
-##### MacOS:
-
-```shell script
-titan-sc completion bash > /usr/local/etc/bash_completion.d/titan-sc
-```
-
-### Zsh
-
-If shell completion is not already enabled in your environment you will need to enable it.  You can execute the following once:
-
-```shell script
-echo "autoload -U compinit; compinit" >> ~/.zshrc
-```
-
-To load completions for each session, execute once:
-
-```shell script
-titan-sc completion zsh > "${fpath[1]}/_titan-sc"
-```
-
-You will need to start a new shell for this setup to take effect.
-
-### Fish
-
-```shell script
-titan-sc completion fish | source
-```
-
-To load completions for each session, execute once:
-
-```shell script
-titan-sc completion fish > ~/.config/fish/completions/titan-sc.fish
-```
-
-### Powershell
-
-You need PowerShell version 5.0 or above, which comes with Windows 10 and can be downloaded separately for Windows 7 or 8.1. You can then source the completion file from your PowerShell profile, which is referenced by the `$Profile` environment variable. Execute `Get-Help about_Profiles` for more info about PowerShell profiles.
-
-Generate the completion file:
-
-```shell script
-titan-sc completion powershell > completion_file
-```
-
 
 ## Usage
 
@@ -265,23 +210,11 @@ Usage:
   titan-sc [command]
 
 Available Commands:
-  company          Retrieve information about your companies.
   completion       Generate completion script
-  firewall         Manage your networks firewall rules.
   help             Help about any command
-  history          List latest events on a server or a company.
-  ip               Manage IP addresses.
-  kvmip            Manage servers' KVM IP.
-  managed-services Enable managed services.
-  network          Manage private networks.
-  port-nat         Manage PNAT rules.
   server           Manage servers.
   setup            Automated config/install.
   snapshot         Manage servers' snapshots.
-  ssh-key          Manage your user ssh keys.
-  user             Manage your user information.
-  version          Show API or CLI version.
-  weathermap       Show weather map.
 
 Flags:
   -C, --color   Enable colorized output.
@@ -298,12 +231,6 @@ Get (sub)commands help:
 titan-sc [command] --help
 ```
 
-Show current version:
-
-```
-titan-sc version
-```
-
 The CLI default output is in JSON but you can print a more human readable output by using the flag `--human` or `-H`:
 
 ```
@@ -318,10 +245,18 @@ titan-sc [command] --human
 titan-sc server list
 ```
 
-* Start all stopped servers (one-liner with `jq` and `xargs`):
+* Show details of a specific server:
 
 ```
-titan-sc srv ls | jq '.[] | select(.state == "stopped") | .uuid' | xargs -L1 titan-sc srv start
+titan-sc server show --server-uuid ${SERVER_UUID}
+```
+
+*where `${SERVER_UUID}` is the UUID of the targeted server.*
+
+* List snapshots for a server:
+
+```
+titan-sc snapshot list --server-uuid ${SERVER_UUID}
 ```
 
 * Force create a new snapshot for your server:
@@ -332,13 +267,18 @@ titan-sc snapshot create --server-uuid ${SERVER_UUID} --yes-i-agree-to-erase-old
 
 *where `${SERVER_UUID}` is the UUID of the targeted server. The last option may be used to automatically erase oldest server's snapshot when quota has been reached.*
 
-* Restore a snapshot:
+* Delete a snapshot:
 
 ```
-titan-sc snapshot restore --server-uuid ${SERVER_UUID} --snapshot-uuid ${SNAPSHOT_UUID}
+titan-sc snapshot delete --server-uuid ${SERVER_UUID} --snapshot-uuid ${SNAPSHOT_UUID}
 ```
 
-*where `${SERVER_UUID}` is the UUID of the targeted server and `${SNAPSHOT_UUID}` is the UUID of the snapshot to restore.
-The targeted server must be stopped before starting the restoration. Running this command will **erase all data** of your
- server's disk to replace it by the content of the snapshot. It is therefore highly recommended to create a fresh snapshot
- before restoring an old one in order to be able to rollback the operation.*
+*where `${SERVER_UUID}` is the UUID of the targeted server and `${SNAPSHOT_UUID}` is the UUID of the snapshot to delete.*
+
+* Rotate snapshots (create new and delete oldest if needed):
+
+```
+titan-sc snapshot rotate --server-uuid ${SERVER_UUID} --force
+```
+
+*where `${SERVER_UUID}` is the UUID of the targeted server. The `--force` flag skips confirmation prompt.*

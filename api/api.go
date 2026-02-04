@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -66,7 +66,7 @@ func (API *API) SendRequestToAPI(method, path string, httpData interface{}) ([]b
 	defer resp.Body.Close()
 
 	// Read API output
-	apiResponseBody, err := ioutil.ReadAll(resp.Body)
+	apiResponseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, nil, err
 	}

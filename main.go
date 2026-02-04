@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"os"
 	"runtime"
 	"strings"
 	"titan-sc/api"
 	"titan-sc/cmd"
 	"titan-sc/run"
+
+	"github.com/spf13/viper"
 )
 
 const (
@@ -17,7 +18,7 @@ const (
 	ConfigFileName = "config"
 	VersionMajor   = 3
 	VersionMinor   = 0
-	VersionPatch   = 2
+	VersionPatch   = 7
 )
 
 var (
@@ -56,21 +57,9 @@ func init() {
 		VersionPatch)
 
 	cmdInstance.CompletionCmdAdd()
-	cmdInstance.CompanyCmdAdd()
 	cmdInstance.ServerCmdAdd()
 	cmdInstance.SnapshotCmdAdd()
-	cmdInstance.HistoryCmdAdd()
-	cmdInstance.NetworkCmdAdd()
-	cmdInstance.FirewallCmdAdd()
-	cmdInstance.KvmIpCmdAdd()
-	cmdInstance.IpCmdAdd()
-	cmdInstance.UserCmdAdd()
 	cmdInstance.SetupCmdAdd()
-	cmdInstance.SSHKeysCmdAdd()
-	cmdInstance.VersionCmdAdd()
-	cmdInstance.PnatCmdAdd()
-	cmdInstance.ManagedServicesCmdAdd()
-	cmdInstance.WeatherMapCmdAdd()
 	cmdInstance.RootCommand.PersistentFlags().BoolP("human", "H", false,
 		"Format output for human.")
 	cmdInstance.RootCommand.PersistentFlags().BoolP("color", "C", false,

@@ -1,19 +1,21 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"os"
 	"os/user"
 	"runtime"
 	"strings"
 	"titan-sc/api"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const (
-	LocalApp       = "./titan-sc"
-	UsrLocalBinApp = "/usr/local/bin/titan-sc"
+	AppName  = "titan-sc"
+	LocalApp = "./titan-sc"
 )
 
 func (cmd *CMD) SetupCmdAdd() {
@@ -34,54 +36,116 @@ func (cmd *CMD) SetupCmdAdd() {
 func (cmd *CMD) setupApp(cobraCommand *cobra.Command, args []string) {
 	_ = args
 	cmd.runMiddleware.ParseGlobalFlags(cobraCommand)
-	token, _ := cobraCommand.Flags().GetString("token")
-	var err error
+	token, err := cobraCommand.Flags().GetString("token")
+	if err != nil {
+		fmt.Println("Fail to parse --token option.")
+		return
+	}
 
 	if runtime.GOOS == "windows" {
-		path := cmd.configFileName
-		err = initCreateFile(path, token)
+		err = installOnWindows(token, cmd.configFileName)
 	} else {
-		err = initAppUnixLike(token, cmd.configFileName)
+		err = installOnUnixLike(token, cmd.configFileName)
 	}
+
 	if err != nil {
-		cmd.runMiddleware.OutputError(err)
+		fmt.Println(err.Error())
 	} else {
 		fmt.Println("Init success.")
 	}
 }
 
-func initAppUnixLike(token, configFileName string) error {
+func installOnWindows(token, path string) error {
+	return initCreateFile(token, path)
+}
+
+func installOnUnixLike(token, configFileName string) error {
+	if err := installIsRoot(); err != nil {
+		return err
+	}
+
+	if err := installBin(LocalApp); err != nil {
+		return err
+	}
+
+	return installConfigFile(token, configFileName)
+}
+
+func installIsRoot() error {
 	// check user UID
 	usr, err := user.Current()
 	if err != nil {
 		return err
 	}
 	if usr.Uid != "0" {
-		return fmt.Errorf("You must have root privileges to use the 'setup' command.")
+		return errors.New("you must have root privileges to use the 'setup' command")
 	}
+	return nil
+}
 
-	// Install bin in /usr/local/bin
-	_, err = os.Stat(UsrLocalBinApp)
-	if !os.IsNotExist(err) {
-		if err := os.Remove(UsrLocalBinApp); err != nil {
-			return err
-		}
-	}
-	if err := os.Link(LocalApp, UsrLocalBinApp); err != nil {
+func installBin(src string) error {
+	dirs := []string{"/usr/local/bin/", "/usr/bin"}
+
+	dstPath, err := deleteBinIfExists(dirs)
+	if err != nil {
 		return err
 	}
 
+	if dstPath == "" {
+		dir, err := getBinDestination(dirs)
+		if err != nil {
+			return err
+		}
+		dstPath = fmt.Sprintf("%s%s", dir, AppName)
+	}
+
+	if err = os.Link(src, dstPath); err != nil {
+		return err
+	}
+	return nil
+}
+
+func deleteBinIfExists(dirs []string) (string, error) {
+	var dstPath string
+
+	for _, dir := range dirs {
+		dstPath = fmt.Sprintf("%s%s", dir, AppName)
+		if pathExists(dstPath) {
+			if err := os.Remove(dstPath); err != nil {
+				return "", err
+			}
+			return dstPath, nil
+		}
+	}
+	return "", nil
+}
+
+func pathExists(path string) bool {
+	_, err := os.Stat(path)
+	return !os.IsNotExist(err)
+}
+
+func getBinDestination(dirs []string) (string, error) {
+	for _, dir := range dirs {
+		if pathExists(dir) {
+			return dir, nil
+		}
+	}
+	return "", errors.New("no available path found for install CLI")
+}
+
+func installConfigFile(token, configFileName string) error {
 	path := os.Getenv("HOME") + "/" + ".titan"
 	if err := os.Mkdir(path, os.ModePerm); err != nil {
 		if !strings.Contains(err.Error(), ": file exists") {
-			return fmt.Errorf("Init: create dir path <%s> error.", path)
+			return fmt.Errorf("init: create dir path <%s> error", path)
 		}
 	}
 	path = path + "/" + configFileName
-	return initCreateFile(path, token)
+	return initCreateFile(token, path)
 }
 
-func initCreateFile(path, token string) error {
+func initCreateFile(token, path string) error {
 	data := map[string]interface{}{
 		"token": token,
 		"uri":   api.DefaultURI,

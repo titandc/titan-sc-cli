@@ -4,20 +4,21 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 	"strings"
 	"time"
 	"titan-sc/api"
+
+	"github.com/spf13/cobra"
 )
 
 // State List
 const (
 	StateCreating = "creating"
-	StateCreated = "created"
-	StateDeleted = "deleted"
-	StateStarted = "started"
-	StateStopped = "stopped"
+	StateCreated  = "created"
+	StateDeleted  = "deleted"
+	StateStarted  = "started"
+	StateStopped  = "stopped"
 )
 
 type RunMiddleware struct {
@@ -78,23 +79,20 @@ func (run *RunMiddleware) printAPIReturn(apiReturn *api.APIReturn) {
 	} else {
 		printAsJson(apiReturn)
 	}
-	return
 }
 
 func printAsJson(data interface{}) {
-	switch data.(type) {
+	switch v := data.(type) {
 	case []byte:
-		// do nothing
-		fmt.Println(string(data.([]byte)))
+		fmt.Println(string(v))
 	default:
 		dataToPrint, err := json.MarshalIndent(data, "", "  ")
 		if err != nil {
 			fmt.Printf("{'error': '%s'}", err.Error())
 			return
 		}
-		fmt.Printf(string(dataToPrint))
+		fmt.Print(string(dataToPrint))
 	}
-
 }
 
 func printAPIReturnAsString(apiReturn *api.APIReturn) {
